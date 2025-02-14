@@ -1,0 +1,46 @@
+{
+    "name": "terminal42/contao-seal",
+    "description": "This is a POC extension add SEAL integration for the frontend into Contao Open Source CMS",
+    "keywords": ["contao", "search", "frontend"],
+    "type": "contao-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Yanick Witschi",
+            "email": "yanick.witschi@terminal42.ch"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "cmsig/seal": "^0.6.1",
+        "cmsig/seal-loupe-adapter": "^0.6.1",
+        "cmsig/seal-symfony-bundle": "^0.6.1",
+        "contao/core-bundle": "^5.3.14"
+    },
+    "require-dev": {
+        "contao/manager-plugin": "^2.0",
+        "phpunit/phpunit": "^11.5",
+        "terminal42/contao-build-tools": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "Terminal42\\ContaoSeal\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Terminal42\\ContaoSeal\\Test\\": "tests"
+        }
+    },
+    "extra": {
+        "contao-manager-plugin": "Terminal42\\ContaoSeal\\ContaoManager\\Plugin"
+    },
+    "config": {
+        "allow-plugins": {
+            "terminal42/contao-build-tools": true,
+            "contao-components/installer": false,
+            "php-http/discovery": false,
+            "contao/manager-plugin": false
+        }
+    }
+}

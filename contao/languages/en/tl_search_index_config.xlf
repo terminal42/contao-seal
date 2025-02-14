@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2">
+  <file datatype="php" source-language="en" target-language="en">
+    <body>
+      <trans-unit id="tl_search_index_config.adapters.loupe_default">
+        <source>Loupe (Default)</source>
+        <target>Loupe (Default)</target>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.providers.standard">
+        <source>Standard</source>
+        <target>Standard</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
