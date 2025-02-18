@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Terminal42\ContaoSeal\Test\Indexer;
+namespace Terminal42\ContaoSeal\Test\Provider;
 
 use Contao\CoreBundle\Search\Document;
 use Nyholm\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
-use Terminal42\ContaoSeal\Indexer\Util;
+use Terminal42\ContaoSeal\Provider\Util;
 
 class UtilTest extends TestCase
 {

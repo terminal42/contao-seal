@@ -34,9 +34,9 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
 
     // Palettes
     'palettes' => [
-        '__selector__' => ['provider'],
-        'default' => '{title_legend},name;{config_legend},adapter,provider;',
-        'standard' => '{title_legend},name;{config_legend},adapter,provider;{provider_config},urls,canonicals',
+        '__selector__' => ['providerFactory'],
+        'default' => '{title_legend},name;{config_legend},adapter,providerFactory;',
+        'standard' => '{title_legend},name;{config_legend},adapter,providerFactory;{provider_config},urls,canonicals',
     ],
 
     // Fields
@@ -58,7 +58,7 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
             'eval' => ['mandatory' => true, 'includeBlankOption' => true, 'tl_class' => 'w50'],
             'sql' => ['type' => 'string', 'length' => 255, 'default' => ''],
         ],
-        'provider' => [
+        'providerFactory' => [
             'search' => true,
             'inputType' => 'select',
             'eval' => ['mandatory' => true, 'includeBlankOption' => true, 'tl_class' => 'w50', 'submitOnChange' => true],

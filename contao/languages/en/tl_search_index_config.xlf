@@ -6,7 +6,7 @@
         <source>Loupe (Default)</source>
         <target>Loupe (Default)</target>
       </trans-unit>
-      <trans-unit id="tl_search_index_config.providers.standard">
+      <trans-unit id="tl_search_index_config.provider_factory.standard">
         <source>Standard</source>
         <target>Standard</target>
       </trans-unit>

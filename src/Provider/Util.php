@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Terminal42\ContaoSeal\Indexer;
+namespace Terminal42\ContaoSeal\Provider;
 
 use Contao\CoreBundle\Search\Document;
+use Contao\StringUtil;
 use Symfony\Component\DomCrawler\Crawler;
 
 class Util
@@ -59,5 +60,22 @@ class Util
         } catch (\Exception) {
             return 'undefined';
         }
+    }
+
+    public static function buildRegexFromListWizard(array|string $listWizard): string
+    {
+        $filter = array_filter(StringUtil::deserialize($listWizard, true));
+
+        if ([] === $filter) {
+            return '';
+        }
+
+        $regex = [];
+
+        foreach ($filter as $value) {
+            $regex[] = $value;
+        }
+
+        return '@'.implode('|', $regex).'@';
     }
 }

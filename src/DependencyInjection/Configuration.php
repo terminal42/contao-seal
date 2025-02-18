@@ -17,6 +17,7 @@ class Configuration implements ConfigurationInterface
             ->getRootNode()
             ->children()
                 ->arrayNode('adapters')
+                    ->info('Define the search adapters. They have to me managed using key-value. The key is the internal name, e.g. stored also in the database when configuring indexes in the backend. The value has to be a valid SEAL DSN.')
                     ->useAttributeAsKey('name')
                     ->arrayPrototype()
                         ->children()
@@ -24,6 +25,17 @@ class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                     ->defaultValue($this->getLoupeDefaultAdapterIfSupported())
+                ->end()
+                ->arrayNode('configs')
+                    ->info('Allows to define configurations in the configuration file in addition to in the Contao backend/database.')
+                    ->useAttributeAsKey('id')
+                    ->arrayPrototype()
+                        ->children()
+                            ->scalarNode('adapter')->isRequired()->end()
+                            ->scalarNode('provider')->isRequired()->end()
+                            ->arrayNode('providerConfig')->end()
+                        ->end()
+                    ->end()
                 ->end()
             ->end()
         ;
@@ -44,7 +56,7 @@ class Configuration implements ConfigurationInterface
         }
 
         return [
-            'loupe_default' => 'loupe://%kernel.project_dir%/var/frontend_search',
+            'loupe_default' => 'loupe://%kernel.project_dir%/var/loupe',
         ];
     }
 }

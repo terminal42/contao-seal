@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Terminal42\ContaoSeal\FrontendSearch;
-use Terminal42\ContaoSeal\Provider\ProviderInterface;
+use Terminal42\ContaoSeal\Provider\ProviderFactoryInterface;
 
 class Terminal42ContaoSealExtension extends Extension
 {
@@ -41,11 +41,12 @@ class Terminal42ContaoSealExtension extends Extension
         }
 
         $container->getDefinition(FrontendSearch::class)
+            ->setArgument('$configs', $config['configs'])
             ->setArgument('$adapters', $adapters)
         ;
 
-        $container->registerForAutoconfiguration(ProviderInterface::class)
-            ->addTag('terminal42_contao_seal.provider')
+        $container->registerForAutoconfiguration(ProviderFactoryInterface::class)
+            ->addTag('terminal42_contao_seal.provider_factory')
         ;
     }
 }
