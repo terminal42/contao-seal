@@ -7,6 +7,8 @@ namespace Terminal42\ContaoSeal\Provider;
 use Contao\CoreBundle\Search\Document;
 use Contao\StringUtil;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\String\TruncateMode;
+use Symfony\Component\String\UnicodeString;
 
 class Util
 {
@@ -77,5 +79,49 @@ class Util
         }
 
         return '@'.implode('|', $regex).'@';
+    }
+
+    public static function trimSearchContext(string $context, int $numberOfContextChars, string $contextEllipsis = '[…]', string $preTag = '<em>', string $postTag = '</em>'): string
+    {
+        $chunks = [];
+        $context = new UnicodeString($context);
+
+        foreach ($context->split($preTag) as $chunk) {
+            foreach ($chunk->split($postTag, 2) as $innerChunk) {
+                $chunks[] = $innerChunk;
+            }
+        }
+
+        // Iterate over odd indices (1, 3, 5, ...) which are the key phrases
+        for ($i = 1; $i < \count($chunks); $i += 2) {
+            // Truncate and prepend "..." to the previous entry (if truncated)
+            if ($i - 1 >= 0) {
+                $truncated = $chunks[$i - 1]->reverse()->truncate($numberOfContextChars, '', TruncateMode::WordBefore)->reverse();
+                if (!$truncated->equalsTo($chunks[$i - 1])) {
+                    $chunks[$i - 1] = $truncated->prepend($contextEllipsis);
+                }
+            }
+
+            // Truncate and append "..." to the next entry (if truncated)
+            if ($i + 1 < \count($chunks)) {
+                $truncated = $chunks[$i + 1]->truncate($numberOfContextChars, '', TruncateMode::WordBefore);
+                if (!$truncated->equalsTo($chunks[$i + 1])) {
+                    $chunks[$i + 1] = $truncated->append($contextEllipsis);
+                }
+            }
+        }
+
+        $result = [];
+
+        foreach ($chunks as $i => $chunk) {
+            if (0 === $i % 2) {
+                $result[] = $chunk->toString();
+            } else {
+                // Key phrase needs tags again
+                $result[] = $chunk->prepend($preTag)->append($postTag)->toString();
+            }
+        }
+
+        return implode('', $result);
     }
 }
