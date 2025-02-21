@@ -15,10 +15,15 @@ use Terminal42\ContaoSeal\Provider\ProviderInterface;
 
 class EngineConfig
 {
+    private const DATABASE_CONFIG_PREFIX = 'db_';
+
+    private const CONFIG_CONFIG_PREFIX = '_';
+
     private EngineInterface|null $engine = null;
 
-    public function __construct(
+    private function __construct(
         private string $id,
+        private string $name,
         private AdapterInterface $adapter,
         private ProviderInterface $provider,
     ) {
@@ -27,6 +32,11 @@ class EngineConfig
     public function getId(): string
     {
         return $this->id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function getIndexName(): string
@@ -55,5 +65,15 @@ class EngineConfig
     public function convertDocumentToFields(Document $document): array|null
     {
         return $this->provider->convertDocumentToFields($document);
+    }
+
+    public static function createFromDatabase(int $id, string $name, AdapterInterface $adapter, ProviderInterface $provider): self
+    {
+        return new self(self::DATABASE_CONFIG_PREFIX.$id, $name, $adapter, $provider);
+    }
+
+    public static function createFromConfig(string $configName, string $name, AdapterInterface $adapter, ProviderInterface $provider): self
+    {
+        return new self(self::CONFIG_CONFIG_PREFIX.$configName, $name, $adapter, $provider);
     }
 }

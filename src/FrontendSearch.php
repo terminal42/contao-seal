@@ -119,9 +119,8 @@ class FrontendSearch implements ResetInterface
     {
         $options = [];
 
-        foreach (array_keys($this->getEngineConfigs()) as $config) {
-            dd($config);
-            $options[$name] = $this->translator->trans('tl_search_index_config.providers.'.$name, [], 'contao_tl_search_index_config');
+        foreach ($this->getEngineConfigs() as $config) {
+            $options[$config->getId()] = $config->getName();
         }
 
         return $options;
@@ -149,31 +148,34 @@ class FrontendSearch implements ResetInterface
         };
 
         if (null === $this->indexConfigs) {
-            $configs = [];
+            $this->indexConfigs = [];
 
-            foreach ($this->configs as $configId => $config) {
-                $configs[] = new EngineConfig(
-                    '_'.$configId,
+            foreach ($this->configs as $configName => $config) {
+                $config = EngineConfig::createFromConfig(
+                    $configName,
+                    $this->translator->trans('tl_search_index_config.index.'.$configName, [], 'contao_tl_search_index_config'),
                     $getAdapter($config['adapter']),
                     $createProvider($config['providerFactory'], $config['providerConfig']),
                 );
+                $this->indexConfigs[$config->getId()] = $config;
             }
 
             foreach ($this->connection->fetchAllAssociative('SELECT * FROM tl_search_index_config') as $row) {
-                $configId = 'db_'.$row['id'];
+                $id = (int) $row['id'];
+                $name = $row['name'];
                 $adapter = $getAdapter($row['adapter']);
                 $providerFactoryName = $row['providerFactory'];
 
-                unset($row['id'], $row['adapter'], $row['provider']);
+                unset($row['id'], $row['name'], $row['adapter'], $row['provider']);
 
-                $configs[] = new EngineConfig(
-                    $configId,
+                $config = EngineConfig::createFromDatabase(
+                    $id,
+                    $name,
                     $adapter,
                     $createProvider($providerFactoryName, $row),
                 );
+                $this->indexConfigs[$config->getId()] = $config;
             }
-
-            $this->indexConfigs = $configs;
         }
 
         return $this->indexConfigs;

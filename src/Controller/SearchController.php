@@ -23,9 +23,9 @@ class SearchController extends AbstractContentElementController
 
     protected function getResponse(FragmentTemplate $template, ContentModel $model, Request $request): Response
     {
-        $searchIndex = (int) $model->search_index ?? 0;
+        $configId = (string) $model->search_index ?? '';
 
-        if (0 === $searchIndex) {
+        if ('' === $configId) {
             return new Response();
         }
 
@@ -35,7 +35,7 @@ class SearchController extends AbstractContentElementController
         $currentPage = $request->query->get($currentPageParam, 1);
         $perPage = $model->perPage ?? 10;
 
-        $result = $this->getResult($searchIndex, $query, $currentPage, $perPage);
+        $result = $this->getResult($configId, $query, $currentPage, $perPage);
 
         $template->queryParam = $queryParam;
         $template->query = $query;
@@ -47,7 +47,7 @@ class SearchController extends AbstractContentElementController
         return $template->getResponse();
     }
 
-    private function getResult(int $searchIndex, string $query, int $page, int $perPage): Result
+    private function getResult(string $configId, string $query, int $page, int $perPage): Result
     {
         if ('' === $query) {
             return new Result((
@@ -57,7 +57,7 @@ class SearchController extends AbstractContentElementController
             )(), 0);
         }
 
-        return $this->frontendSearch->search($searchIndex, $query);
+        return $this->frontendSearch->search($configId, $query);
     }
 
     private function getPagination(int $total, int $perPage, string $perPageParam): string

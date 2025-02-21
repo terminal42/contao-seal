@@ -5,5 +5,5 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['search'] = '{type_legend},type,hea
 $GLOBALS['TL_DCA']['tl_content']['fields']['search_index'] = [
     'inputType' => 'select',
     'eval' => ['mandatory' => true],
-    'sql' => ['type' => 'integer', 'unsigned' => true, 'default' => 0],
+    'sql' => ['type' => 'string', 'default' => ''],
 ];
