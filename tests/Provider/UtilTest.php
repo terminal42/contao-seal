@@ -34,9 +34,9 @@ class UtilTest extends TestCase
     public static function trimSearchContext(): \Generator
     {
         yield 'Basic example' => [
-            'Lorem ipsum dolor sit amet, <em>consectetur</em> adipiscing elit. Etiam eleifend, augue in dictum lacinia, nisi lacus mollis <em>massa</em>, a pulvinar felis dui nec nisl. Pellentesque justo erat, sollicitudin ac dolor finibus, dapibus lacinia diam.',
+            'Lorem ipsum dolor sit amet, <em>consectetur</em>[…]adipiscing elit. Etiam eleifend, augue in dictum lacinia, nisi lacus mollis <em>massa</em>, a pulvinar felis dui nec nisl. Pellentesque justo erat, sollicitudin ac dolor finibus, dapibus lacinia diam.',
             20,
-            '[…]dolor sit amet, <em>consectetur</em> adipiscing elit.[…]<em>massa</em>, a pulvinar felis[…]',
+            '[…]ipsum dolor sit amet, <em>consectetur</em>[…]adipiscing elit.[…]<em>massa</em>, a pulvinar felis dui[…]',
         ];
 
         yield 'Context overlapping the end of a sentence' => [
@@ -48,7 +48,7 @@ class UtilTest extends TestCase
         yield 'Context overlapping the start of a sentence' => [
             'The quick brown fox jumps over the lazy <em>dog</em>. The <em>fox</em> was very agile and thus this sentence went on forever.',
             40,
-            'The quick brown fox jumps over the lazy <em>dog</em>. The <em>fox</em> was very agile and thus this sentence[…]',
+            'The quick brown fox jumps over the lazy <em>dog</em>. The <em>fox</em> was very agile and thus this sentence went[…]',
         ];
 
         yield 'Test with different tags' => [
@@ -76,7 +76,7 @@ class UtilTest extends TestCase
         yield 'Test with different ellipsis' => [
             'The quick brown fox jumps <em>over the lazy dog</em>. The <em>fox</em> was very agile and thus this sentence went on forever.',
             20,
-            '~~~brown fox jumps <em>over the lazy dog</em>. The <em>fox</em> was very agile and~~~',
+            '~~~quick brown fox jumps <em>over the lazy dog</em>. The <em>fox</em> was very agile and~~~',
             '<em>',
             '</em>',
             '~~~',

@@ -7,7 +7,6 @@ namespace Terminal42\ContaoSeal\Provider;
 use Contao\CoreBundle\Search\Document;
 use Contao\StringUtil;
 use Symfony\Component\DomCrawler\Crawler;
-use Symfony\Component\String\TruncateMode;
 use Symfony\Component\String\UnicodeString;
 
 class Util
@@ -96,7 +95,7 @@ class Util
         for ($i = 1; $i < \count($chunks); $i += 2) {
             // Truncate and prepend "..." to the previous entry (if truncated)
             if ($i - 1 >= 0) {
-                $truncated = $chunks[$i - 1]->reverse()->truncate($numberOfContextChars, '', TruncateMode::WordBefore)->reverse();
+                $truncated = $chunks[$i - 1]->reverse()->truncate($numberOfContextChars, cut: false)->reverse();
                 if (!$truncated->equalsTo($chunks[$i - 1])) {
                     $chunks[$i - 1] = $truncated->prepend($contextEllipsis);
                 }
@@ -104,7 +103,7 @@ class Util
 
             // Truncate and append "..." to the next entry (if truncated)
             if ($i + 1 < \count($chunks)) {
-                $truncated = $chunks[$i + 1]->truncate($numberOfContextChars, '', TruncateMode::WordBefore);
+                $truncated = $chunks[$i + 1]->truncate($numberOfContextChars, cut: false);
                 if (!$truncated->equalsTo($chunks[$i + 1])) {
                     $chunks[$i + 1] = $truncated->append($contextEllipsis);
                 }
