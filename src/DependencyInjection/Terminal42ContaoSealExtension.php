@@ -26,6 +26,7 @@ class Terminal42ContaoSealExtension extends Extension
         );
 
         $loader->load('services.php');
+        $loader->load('listeners.php');
 
         $adapters = [];
 

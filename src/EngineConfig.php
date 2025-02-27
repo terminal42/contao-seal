@@ -11,6 +11,7 @@ use CmsIg\Seal\Schema\Field\IdentifierField;
 use CmsIg\Seal\Schema\Index;
 use CmsIg\Seal\Schema\Schema;
 use Contao\CoreBundle\Search\Document;
+use Symfony\Component\HttpFoundation\Request;
 use Terminal42\ContaoSeal\Provider\ProviderInterface;
 
 class EngineConfig
@@ -24,7 +25,9 @@ class EngineConfig
     private function __construct(
         private string $id,
         private string $name,
+        private string $adapterName,
         private AdapterInterface $adapter,
+        private string $providerFactoryName,
         private ProviderInterface $provider,
     ) {
     }
@@ -67,13 +70,40 @@ class EngineConfig
         return $this->provider->convertDocumentToFields($document);
     }
 
-    public static function createFromDatabase(int $id, string $name, AdapterInterface $adapter, ProviderInterface $provider): self
+    public static function createFromDatabase(int $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, ProviderInterface $provider,): self
     {
-        return new self(self::DATABASE_CONFIG_PREFIX.$id, $name, $adapter, $provider);
+        return new self(self::DATABASE_CONFIG_PREFIX.$id, $name, $adapterName, $adapter, $providerFactoryName, $provider);
     }
 
-    public static function createFromConfig(string $configName, string $name, AdapterInterface $adapter, ProviderInterface $provider): self
+    public static function createFromConfig(string $configName, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, ProviderInterface $provider,): self
     {
-        return new self(self::CONFIG_CONFIG_PREFIX.$configName, $name, $adapter, $provider);
+        return new self(self::CONFIG_CONFIG_PREFIX.$configName, $name, $adapterName, $adapter, $providerFactoryName, $provider);
+    }
+
+    public function getTemplateData(Request $request): array
+    {
+        $searchBuilder = $this->getEngine()->createSearchBuilder($this->getIndexName());
+
+        return $this->provider->getTemplateData($searchBuilder, $request);
+    }
+
+    public function getTemplateName(Request $request): string
+    {
+        return $this->provider->getTemplateName($request);
+    }
+
+    public function getDocumentId(Document $document)
+    {
+        return $this->provider->getDocumentId($document);
+    }
+
+    public function getAdapterName(): string
+    {
+        return $this->adapterName;
+    }
+
+    public function getProviderFactoryName(): string
+    {
+        return $this->providerFactoryName;
     }
 }

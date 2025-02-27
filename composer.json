@@ -12,9 +12,9 @@
     ],
     "require": {
         "php": "^8.1",
-        "cmsig/seal": "^0.6.1",
-        "cmsig/seal-loupe-adapter": "^0.6.1",
-        "cmsig/seal-symfony-bundle": "^0.6.1",
+        "cmsig/seal": "0.7.x-dev",
+        "cmsig/seal-loupe-adapter": "0.7.x-dev",
+        "cmsig/seal-symfony-bundle": "0.7.x-dev",
         "contao/core-bundle": "^5.3.14"
     },
     "require-dev": {

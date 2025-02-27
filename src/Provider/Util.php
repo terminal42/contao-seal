@@ -80,7 +80,7 @@ class Util
         return '@'.implode('|', $regex).'@';
     }
 
-    public static function trimSearchContext(string $context, int $numberOfContextChars, string $contextEllipsis = '[…]', string $preTag = '<em>', string $postTag = '</em>'): string
+    public static function trimSearchContext(string $context, int $numberOfContextChars, string $contextEllipsis = '[…]', string $preTag = '<mark>', string $postTag = '</mark>'): string
     {
         $chunks = [];
         $context = new UnicodeString($context);

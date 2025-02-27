@@ -23,7 +23,6 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             [], // Adapters set by extension
             tagged_iterator('terminal42_contao_seal.provider_factory', null, 'getName'),
         ])
-        ->public()
     ;
 
     $services->set(SearchController::class)

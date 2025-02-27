@@ -1,0 +1,54 @@
+{% set uniqueId = element_html_id ? element_html_id : ('search_' ~ data.id) %}
+
+{% block form %}
+    <form method="get">
+        <div class="formbody">
+            <div class="widget widget-text">
+                <label for="ctrl_keywords_{{ uniqueId }}" class="invisible">{{ 'MSC.keywords'|trans }}</label>
+                <input type="search" name="{{ queryParam }}" id="ctrl_keywords_{{ uniqueId }}" class="text" value="{{ query }}">
+            </div>
+            <div class="widget widget-submit">
+                <button type="submit" id="ctrl_submit_{{ uniqueId }}" class="submit">{{ 'MSC.searchLabel'|trans }}</button>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+    {% if isSubmitted %}
+        {% block results_outer %}
+            {% if results is empty %}
+                {% block no_results_message %}<p class="message empty">{{ 'MSC.sEmpty'|trans([query|e])|raw }}</p>{% endblock %}
+            {% else %}
+                {% block results %}
+                    {% for result in results %}
+                        <div class="search-result">
+                            {# Result image #}
+                            {% block result_image %}
+                                {% if result.image %}
+                                    {% with {figure: result.image} %}{{ block('figure_component') }}{% endwith %}
+                                {% endif %}
+                            {% endblock %}
+
+                            {# Result headline #}
+                            {% block result_headline %}
+                                <h3><a href="{{ result.url }}" title="{{ result.title }}">{{ result.headline }}</a></h3>
+                            {% endblock %}
+
+                            {# Result context #}
+                            {% block result_context %}
+                                {% if result.context %}
+                                    <p class="context">{{ result.context|raw }}</p>
+                                {% endif %}
+                            {% endblock %}
+
+                            {# Result url #}
+                            {% block result_url %}
+                                <p class="url">{{ result.decodedUrl }}</p>
+                            {% endblock %}
+                        </div>
+                    {% endfor %}
+                {% endblock %}
+            {% endif %}
+        {% endblock %}
+
+    {% endif %}

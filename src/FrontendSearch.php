@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Terminal42\ContaoSeal;
 
 use CmsIg\Seal\Adapter\AdapterInterface;
-use CmsIg\Seal\Search\Condition\SearchCondition;
-use CmsIg\Seal\Search\Result;
-use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\CoreBundle\Search\Document;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Service\ResetInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Terminal42\ContaoSeal\Provider\ProviderFactoryInterface;
@@ -36,20 +34,18 @@ class FrontendSearch implements ResetInterface
         $this->providerFactories = iterator_to_array($providerFactories);
     }
 
-    public function search(string $configId, string $query): Result
+    public function getProviderTemplateData(string $configId, Request $request)
     {
-        $config = $this->getEngineConfigs()[$configId] ?? null;
+        $config = $this->getEngineConfigForId($configId);
 
-        if (null === $config) {
-            throw new \InvalidArgumentException(\sprintf('Index config "%s" not found.', $configId));
-        }
+        return $config->getTemplateData($request);
+    }
 
-        return $config->getEngine()->createSearchBuilder($config->getIndexName())
-            ->addFilter(new SearchCondition($query))
-            ->limit(10)
-            ->offset(0)
-            ->getResult()
-        ;
+    public function getProviderTemplateName(string $configId, Request $request): string
+    {
+        $config = $this->getEngineConfigForId($configId);
+
+        return $config->getTemplateName($request);
     }
 
     public function index(Document $document): void
@@ -61,9 +57,9 @@ class FrontendSearch implements ResetInterface
                 continue;
             }
 
-            // Ensure the converted document always has the URI as primary key
+            // Ensure the converted document always has the correct primary key
             $converted = array_merge($converted, [
-                'uri' => (string) $document->getUri(),
+                'document_id' => $config->getDocumentId($document),
             ]);
 
             $config->getEngine()->saveDocument($config->getIndexName(), $converted);
@@ -73,7 +69,7 @@ class FrontendSearch implements ResetInterface
     public function delete(Document $document): void
     {
         foreach ($this->getEngineConfigs() as $config) {
-            $config->getEngine()->deleteDocument($config->getIndexName(), (string) $document->getUri());
+            $config->getEngine()->deleteDocument($config->getIndexName(), $config->getDocumentId($document));
         }
     }
 
@@ -90,46 +86,10 @@ class FrontendSearch implements ResetInterface
         $this->indexConfigs = null;
     }
 
-    #[AsCallback('tl_search_index_config', 'fields.adapter.options')]
-    public function getConfigAdapterOptions(): array
-    {
-        $options = [];
-
-        foreach (array_keys($this->adapters) as $name) {
-            $options[$name] = $this->translator->trans('tl_search_index_config.adapters.'.$name, [], 'contao_tl_search_index_config');
-        }
-
-        return $options;
-    }
-
-    #[AsCallback('tl_search_index_config', 'fields.providerFactory.options')]
-    public function getProviderFactoryOptions(): array
-    {
-        $options = [];
-
-        foreach (array_keys($this->providerFactories) as $name) {
-            $options[$name] = $this->translator->trans('tl_search_index_config.provider_factory.'.$name, [], 'contao_tl_search_index_config');
-        }
-
-        return $options;
-    }
-
-    #[AsCallback('tl_content', 'fields.search_index.options')]
-    public function getIndexOptions(): array
-    {
-        $options = [];
-
-        foreach ($this->getEngineConfigs() as $config) {
-            $options[$config->getId()] = $config->getName();
-        }
-
-        return $options;
-    }
-
     /**
      * @return array<string, EngineConfig>
      */
-    private function getEngineConfigs(): array
+    public function getEngineConfigs(): array
     {
         $createProvider = function (string $providerFactoryName, array $providerConfig): ProviderInterface {
             if (!isset($this->providerFactories[$providerFactoryName])) {
@@ -151,11 +111,16 @@ class FrontendSearch implements ResetInterface
             $this->indexConfigs = [];
 
             foreach ($this->configs as $configName => $config) {
+                $adapterName = $config['adapter'];
+                $providerFactoryName = $config['providerFactory'];
+
                 $config = EngineConfig::createFromConfig(
                     $configName,
                     $this->translator->trans('tl_search_index_config.index.'.$configName, [], 'contao_tl_search_index_config'),
-                    $getAdapter($config['adapter']),
-                    $createProvider($config['providerFactory'], $config['providerConfig']),
+                    $adapterName,
+                    $getAdapter($adapterName),
+                    $providerFactoryName,
+                    $createProvider($providerFactoryName, $config['providerConfig']),
                 );
                 $this->indexConfigs[$config->getId()] = $config;
             }
@@ -163,15 +128,18 @@ class FrontendSearch implements ResetInterface
             foreach ($this->connection->fetchAllAssociative('SELECT * FROM tl_search_index_config') as $row) {
                 $id = (int) $row['id'];
                 $name = $row['name'];
-                $adapter = $getAdapter($row['adapter']);
+                $adapterName = $row['adapter'];
                 $providerFactoryName = $row['providerFactory'];
+                $adapter = $getAdapter($adapterName);
 
                 unset($row['id'], $row['name'], $row['adapter'], $row['provider']);
 
                 $config = EngineConfig::createFromDatabase(
                     $id,
                     $name,
+                    $adapterName,
                     $adapter,
+                    $providerFactoryName,
                     $createProvider($providerFactoryName, $row),
                 );
                 $this->indexConfigs[$config->getId()] = $config;
@@ -179,5 +147,19 @@ class FrontendSearch implements ResetInterface
         }
 
         return $this->indexConfigs;
+    }
+
+    /**
+     * @throws \InvalidArgumentException If config does not exist
+     */
+    private function getEngineConfigForId(string $configId): EngineConfig
+    {
+        $config = $this->getEngineConfigs()[$configId] ?? null;
+
+        if (null === $config) {
+            throw new \InvalidArgumentException(\sprintf('Index config "%s" not found.', $configId));
+        }
+
+        return $config;
     }
 }
