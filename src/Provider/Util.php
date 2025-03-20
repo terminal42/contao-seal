@@ -82,6 +82,27 @@ class Util
 
     public static function trimSearchContext(string $context, int $numberOfContextChars, string $contextEllipsis = '[…]', string $preTag = '<mark>', string $postTag = '</mark>'): string
     {
+        $prepend = static function (UnicodeString $string) use ($numberOfContextChars, $contextEllipsis): UnicodeString {
+            $truncated = $string->reverse()->truncate($numberOfContextChars, cut: false)->reverse();
+
+            if ($truncated->equalsTo($string)) {
+                return $string;
+            }
+
+            return $truncated->prepend($contextEllipsis);
+        };
+
+        $append = static function (UnicodeString $string) use ($numberOfContextChars, $contextEllipsis): UnicodeString {
+            $truncated = $string->truncate($numberOfContextChars, cut: false);
+
+            if ($truncated->equalsTo($string)) {
+                return $string;
+            }
+
+            return $truncated->append($contextEllipsis);
+        };
+
+        $result = [];
         $chunks = [];
         $context = new UnicodeString($context);
 
@@ -91,35 +112,35 @@ class Util
             }
         }
 
-        // Iterate over odd indices (1, 3, 5, ...) which are the key phrases
-        for ($i = 1; $i < \count($chunks); $i += 2) {
-            // Truncate and prepend "..." to the previous entry (if truncated)
-            if ($i - 1 >= 0) {
-                $truncated = $chunks[$i - 1]->reverse()->truncate($numberOfContextChars, cut: false)->reverse();
-                if (!$truncated->equalsTo($chunks[$i - 1])) {
-                    $chunks[$i - 1] = $truncated->prepend($contextEllipsis);
-                }
-            }
-
-            // Truncate and append "..." to the next entry (if truncated)
-            if ($i + 1 < \count($chunks)) {
-                $truncated = $chunks[$i + 1]->truncate($numberOfContextChars, cut: false);
-                if (!$truncated->equalsTo($chunks[$i + 1])) {
-                    $chunks[$i + 1] = $truncated->append($contextEllipsis);
-                }
-            }
+        if (\count($chunks) < 3 || 1 !== \count($chunks) % 2) {
+            return $context->toString();
         }
 
-        $result = [];
+        // First element only needs to be prepended
+        $result[] = $prepend(array_shift($chunks));
+
+        // Last element only needs to be appended
+        $last = $append(array_pop($chunks));
 
         foreach ($chunks as $i => $chunk) {
-            if (0 === $i % 2) {
-                $result[] = $chunk->toString();
-            } else {
-                // Key phrase needs tags again
+            if (0 === $i % 2) { // All even are key phrases, they have to be added as is
                 $result[] = $chunk->prepend($preTag)->append($postTag)->toString();
+            } else {
+                if ($chunk->length() <= $numberOfContextChars) {
+                    $result[] = $chunk->toString();
+                } else {
+                    $appended = $append($chunk);
+                    $prepended = $prepend($chunk);
+                    if ($appended->endsWith($contextEllipsis) && $prepended->startsWith($contextEllipsis)) {
+                        $appended = $appended->trimSuffix($contextEllipsis);
+                    }
+
+                    $result[] = $appended->append($prepended->toString())->toString();
+                }
             }
         }
+
+        $result[] = $last->toString();
 
         return implode('', $result);
     }

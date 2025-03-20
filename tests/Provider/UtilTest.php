@@ -34,9 +34,15 @@ class UtilTest extends TestCase
     public static function trimSearchContext(): \Generator
     {
         yield 'Basic example' => [
-            'Lorem ipsum dolor sit amet, <em>consectetur</em>[…]adipiscing elit. Etiam eleifend, augue in dictum lacinia, nisi lacus mollis <em>massa</em>, a pulvinar felis dui nec nisl. Pellentesque justo erat, sollicitudin ac dolor finibus, dapibus lacinia diam.',
+            'Lorem ipsum dolor sit amet, <em>consectetur</em> adipiscing elit. Etiam eleifend, augue in dictum lacinia, nisi lacus mollis <em>massa</em>, a pulvinar felis dui nec nisl. Pellentesque justo erat, sollicitudin ac dolor finibus, dapibus lacinia diam.',
             20,
-            '[…]ipsum dolor sit amet, <em>consectetur</em>[…]adipiscing elit.[…]<em>massa</em>, a pulvinar felis dui[…]',
+            '[…]ipsum dolor sit amet, <em>consectetur</em> adipiscing elit. Etiam[…]lacinia, nisi lacus mollis <em>massa</em>, a pulvinar felis dui[…]',
+        ];
+
+        yield 'Match at the beginning' => [
+            '<em>Quisque</em> maximus nec odio sed gravida. Donec ut risus ut urna auctor feugiat.',
+            30,
+            '<em>Quisque</em> maximus nec odio sed gravida.[…]',
         ];
 
         yield 'Context overlapping the end of a sentence' => [
