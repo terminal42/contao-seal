@@ -15,6 +15,8 @@ use Terminal42\ContaoSeal\Provider\ProviderFactoryInterface;
 
 class Terminal42ContaoSealExtension extends Extension
 {
+    public const PROVIDER_FACTORY_TAG = 'terminal42_contao_seal.provider_factory';
+
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = $this->getConfiguration($configs, $container);
@@ -47,7 +49,7 @@ class Terminal42ContaoSealExtension extends Extension
         ;
 
         $container->registerForAutoconfiguration(ProviderFactoryInterface::class)
-            ->addTag('terminal42_contao_seal.provider_factory')
+            ->addTag(self::PROVIDER_FACTORY_TAG)
         ;
     }
 }

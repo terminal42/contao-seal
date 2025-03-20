@@ -36,7 +36,7 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
     'palettes' => [
         '__selector__' => ['providerFactory'],
         'default' => '{title_legend},name;{config_legend},adapter,providerFactory;',
-        'standard' => '{title_legend},name;{config_legend},adapter,providerFactory;{provider_config},urls,canonicals;{template_legend},template;',
+        'standard' => '{title_legend},name;{config_legend},adapter,providerFactory;{provider_config},urls,canonicals;{image_legend},imgSize;{template_legend},template;',
     ],
 
     // Fields
@@ -64,7 +64,6 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
             'eval' => ['mandatory' => true, 'includeBlankOption' => true, 'tl_class' => 'w50', 'submitOnChange' => true],
             'sql' => ['type' => 'string', 'length' => 255, 'default' => ''],
         ],
-
         'urls' => [
             'inputType' => 'listWizard',
             'eval' => ['multiple' => true, 'decodeEntities' => true, 'tl_class' => 'clr'],
@@ -74,6 +73,12 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
             'inputType' => 'listWizard',
             'eval' => ['multiple' => true, 'decodeEntities' => true, 'tl_class' => 'clr'],
             'sql' => ['type' => 'text', 'notnull' => false],
+        ],
+        'imgSize' => [
+            'inputType' => 'imageSize',
+            'reference' => &$GLOBALS['TL_LANG']['MSC'],
+            'eval' => ['rgxp' => 'natural', 'includeBlankOption' => true, 'nospace' => true, 'tl_class' => 'w50'],
+            'sql' => ['type' => 'string', 'length' => 128, 'default' => ''],
         ],
         'template' => [
             'inputType' => 'listWizard',

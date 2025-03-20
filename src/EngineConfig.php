@@ -16,6 +16,8 @@ use Terminal42\ContaoSeal\Provider\ProviderInterface;
 
 class EngineConfig
 {
+    public const DOCUMENT_ID_ATTRIBUTE_NAME = 'document_id';
+
     private const DATABASE_CONFIG_PREFIX = 'db_';
 
     private const CONFIG_CONFIG_PREFIX = '_';
@@ -54,7 +56,8 @@ class EngineConfig
         }
 
         $fields = $this->provider->getFieldsForSchema();
-        $fields = array_merge($fields, ['uri' => new IdentifierField('uri')]); // "uri" is always our identifier
+        $fields = array_merge($fields, [
+            self::DOCUMENT_ID_ATTRIBUTE_NAME => new IdentifierField(self::DOCUMENT_ID_ATTRIBUTE_NAME)]);
 
         return $this->engine = new Engine(
             $this->adapter,

@@ -11,6 +11,20 @@ use Symfony\Component\String\UnicodeString;
 
 class Util
 {
+    /**
+     * @return array{contentUrl: string, ...}|null
+     */
+    public static function extractPrimaryImageFromSchemaOrgData(array $schemaData): array|null
+    {
+        foreach ($schemaData as $v) {
+            if (isset($v['https://schema.org/primaryImageOfPage']['contentUrl']) && \is_string($v['https://schema.org/primaryImageOfPage']['contentUrl'])) {
+                return $v['https://schema.org/primaryImageOfPage'];
+            }
+        }
+
+        return null;
+    }
+
     public static function extractSearchableContentFromDocument(Document $document): string
     {
         // We're only interested in <body>

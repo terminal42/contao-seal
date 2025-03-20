@@ -24,6 +24,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             service(FrontendSearch::class),
             service('translator'),
             service('contao.twig.finder_factory'),
+            service('security.helper'),
+            service('contao.image.sizes'),
         ])
     ;
 };

@@ -1,4 +1,5 @@
 {% set uniqueId = element_html_id ? element_html_id : ('search_' ~ data.id) %}
+{% use "@Contao/component/_figure.html.twig" %}
 
 {% block form %}
     <form method="get">
@@ -31,7 +32,7 @@
 
                             {# Result headline #}
                             {% block result_headline %}
-                                <h3><a href="{{ result.url }}" title="{{ result.title }}">{{ result.headline }}</a></h3>
+                                <h3><a href="{{ result.url }}" title="{{ result.title }}">{{ result.title }}</a></h3>
                             {% endblock %}
 
                             {# Result context #}
@@ -43,7 +44,7 @@
 
                             {# Result url #}
                             {% block result_url %}
-                                <p class="url">{{ result.decodedUrl }}</p>
+                                <p class="url">{{ result.url }}</p>
                             {% endblock %}
                         </div>
                     {% endfor %}

@@ -59,7 +59,7 @@ class FrontendSearch implements ResetInterface
 
             // Ensure the converted document always has the correct primary key
             $converted = array_merge($converted, [
-                'document_id' => $config->getDocumentId($document),
+                EngineConfig::DOCUMENT_ID_ATTRIBUTE_NAME => $config->getDocumentId($document),
             ]);
 
             $config->getEngine()->saveDocument($config->getIndexName(), $converted);

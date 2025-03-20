@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Terminal42\ContaoSeal\EventListener\DataContainer;
 
+use Contao\BackendUser;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
+use Contao\CoreBundle\Image\ImageSizes;
 use Contao\CoreBundle\Twig\Finder\FinderFactory;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Terminal42\ContaoSeal\FrontendSearch;
 
@@ -15,7 +18,21 @@ class SearchIndexConfigListener
         private FrontendSearch $frontendSearch,
         private TranslatorInterface $translator,
         private FinderFactory $finderFactory,
+        private readonly Security $security,
+        private readonly ImageSizes $imageSizes,
     ) {
+    }
+
+    #[AsCallback(table: 'tl_search_index_config', target: 'fields.imgSize.options')]
+    public function __invoke(): array
+    {
+        $user = $this->security->getUser();
+
+        if (!$user instanceof BackendUser) {
+            return [];
+        }
+
+        return $this->imageSizes->getOptionsForUser($user);
     }
 
     #[AsCallback('tl_search_index_config', 'fields.adapter.options')]
