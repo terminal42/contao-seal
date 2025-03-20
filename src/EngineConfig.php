@@ -70,12 +70,12 @@ class EngineConfig
         return $this->provider->convertDocumentToFields($document);
     }
 
-    public static function createFromDatabase(int $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, ProviderInterface $provider,): self
+    public static function createFromDatabase(int $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, ProviderInterface $provider): self
     {
         return new self(self::DATABASE_CONFIG_PREFIX.$id, $name, $adapterName, $adapter, $providerFactoryName, $provider);
     }
 
-    public static function createFromConfig(string $configName, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, ProviderInterface $provider,): self
+    public static function createFromConfig(string $configName, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, ProviderInterface $provider): self
     {
         return new self(self::CONFIG_CONFIG_PREFIX.$configName, $name, $adapterName, $adapter, $providerFactoryName, $provider);
     }
