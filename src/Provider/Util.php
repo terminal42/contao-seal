@@ -96,29 +96,8 @@ class Util
 
     public static function trimSearchContext(string $context, int $numberOfContextChars, string $contextEllipsis = '[…]', string $preTag = '<mark>', string $postTag = '</mark>'): string
     {
-        $prepend = static function (UnicodeString $string) use ($numberOfContextChars, $contextEllipsis): UnicodeString {
-            $truncated = $string->reverse()->truncate($numberOfContextChars, cut: false)->reverse();
-
-            if ($truncated->equalsTo($string)) {
-                return $string;
-            }
-
-            return $truncated->prepend($contextEllipsis);
-        };
-
-        $append = static function (UnicodeString $string) use ($numberOfContextChars, $contextEllipsis): UnicodeString {
-            $truncated = $string->truncate($numberOfContextChars, cut: false);
-
-            if ($truncated->equalsTo($string)) {
-                return $string;
-            }
-
-            return $truncated->append($contextEllipsis);
-        };
-
-        $result = [];
-        $chunks = [];
         $context = new UnicodeString($context);
+        $chunks = [];
 
         foreach ($context->split($preTag) as $chunk) {
             foreach ($chunk->split($postTag, 2) as $innerChunk) {
@@ -130,31 +109,51 @@ class Util
             return $context->toString();
         }
 
-        // First element only needs to be prepended
-        $result[] = $prepend(array_shift($chunks));
+        $trim = static function (UnicodeString $string, int $length, bool $fromEnd) use ($contextEllipsis): UnicodeString {
+            $truncated = $fromEnd
+                ? $string->reverse()->truncate($length, cut: false)->reverse()
+                : $string->truncate($length, cut: false);
 
-        // Last element only needs to be appended
-        $last = $append(array_pop($chunks));
+            if ($truncated->equalsTo($string)) {
+                return $string;
+            }
+
+            return $fromEnd
+                ? $truncated->prepend($contextEllipsis)
+                : $truncated->append($contextEllipsis);
+        };
+
+        $result = [];
 
         foreach ($chunks as $i => $chunk) {
-            if (0 === $i % 2) { // All even are key phrases, they have to be added as is
-                $result[] = $chunk->prepend($preTag)->append($postTag)->toString();
-            } else {
-                if ($chunk->length() <= $numberOfContextChars) {
+            // Even = context, Odd = highlighted key phrases
+            if (0 === $i % 2) {
+                // The first chunk only ever has to be prepended
+                if (0 === $i) {
+                    $result[] = $trim($chunk, $numberOfContextChars, true)->toString();
+                    // The last chunk only ever has to be appended
+                } elseif ($i === \count($chunks) - 1) {
+                    $result[] = $trim($chunk, $numberOfContextChars, false)->toString();
+                    // An in-between chunk has to be left untouched, if it is shorter or equal the desired context length
+                } elseif ($chunk->length() <= $numberOfContextChars) {
                     $result[] = $chunk->toString();
+                    // Otherwise we have to prepend and append
                 } else {
-                    $appended = $append($chunk);
-                    $prepended = $prepend($chunk);
-                    if ($appended->endsWith($contextEllipsis) && $prepended->startsWith($contextEllipsis)) {
-                        $appended = $appended->trimSuffix($contextEllipsis);
+                    $pre = $trim($chunk, $numberOfContextChars, true);
+                    $post = $trim($chunk, $numberOfContextChars, false);
+
+                    // If both have been shortened, we would have a double ellipsis now, so let's trim that
+                    if ($post->endsWith($contextEllipsis) && $pre->startsWith($contextEllipsis)) {
+                        $post = $post->trimSuffix($contextEllipsis);
                     }
 
-                    $result[] = $appended->append($prepended->toString())->toString();
+                    $result[] = $post->append($pre->toString())->toString();
                 }
+            } else {
+                // Highlighted chunk, leave that untouched with the tags
+                $result[] = $chunk->prepend($preTag)->append($postTag)->toString();
             }
         }
-
-        $result[] = $last->toString();
 
         return implode('', $result);
     }
