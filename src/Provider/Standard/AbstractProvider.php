@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Terminal42\ContaoSeal\Provider\Standard;
 
+use Contao\CoreBundle\Asset\ContaoContext;
 use Contao\CoreBundle\File\Metadata;
 use Contao\CoreBundle\Image\Studio\FigureBuilder;
 use Contao\CoreBundle\Image\Studio\Studio;
 use Contao\CoreBundle\Search\Document;
 use Contao\Image\PictureConfiguration;
 use Contao\Pagination;
-use Contao\System;
+use Loupe\ContextCropper\ContextCropper;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Terminal42\ContaoSeal\Provider\Util;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 abstract class AbstractProvider
 {
@@ -30,6 +31,36 @@ abstract class AbstractProvider
     public function getDocumentId(Document $document): string
     {
         return (string) $document->getUri();
+    }
+
+    protected function documentMatchesUrlRegex(Document $document, string $regex): bool
+    {
+        if ('' === $regex) {
+            return true;
+        }
+
+        $url = (string) $document->getUri();
+
+        if ($url && !preg_match($regex, $url)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function documentMatchesCanonicalRegex(Document $document, string $regex): bool
+    {
+        if ('' === $regex) {
+            return true;
+        }
+
+        $canonical = (string) $document->extractCanonicalUri();
+
+        if ($canonical && !preg_match($regex, $canonical)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -58,15 +89,15 @@ abstract class AbstractProvider
     {
         /** @var Studio $studio */
         $studio = $this->getService('contao.image.studio');
-        $figureBuilder = $studio->createFigureBuilder();
+        /** @var RequestStack $requestStack */
+        $requestStack = $this->getService('request_stack');
+        /** @var ContaoContext $filesContext */
+        $filesContext = $this->getService('contao.assets.files_context');
 
-        // TODO:
-        $baseUrls = array_filter([
-            'https://contao5-ext-dev.wip',
-            System::getContainer()->get('contao.assets.files_context')->getStaticUrl(),
+        $figureBuilder = $studio->createFigureBuilder()->fromUrl($schemaOrgImageData['contentUrl'], [
+            $requestStack->getCurrentRequest()->getBaseUrl(),
+            $filesContext->getStaticUrl(),
         ]);
-
-        $figureBuilder = $figureBuilder->fromUrl($schemaOrgImageData['contentUrl'], $baseUrls);
 
         $figureMeta = new Metadata(array_filter([
             Metadata::VALUE_CAPTION => $schemaOrgImageData['caption'] ?? null,
@@ -91,6 +122,6 @@ abstract class AbstractProvider
 
         $context = implode(' ', $context);
 
-        return Util::trimSearchContext($context, $numberOfContextChars);
+        return (new ContextCropper($numberOfContextChars))->apply($context);
     }
 }

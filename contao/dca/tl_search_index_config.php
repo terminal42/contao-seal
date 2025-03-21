@@ -81,9 +81,9 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
             'sql' => ['type' => 'string', 'length' => 128, 'default' => ''],
         ],
         'template' => [
-            'inputType' => 'listWizard',
-            'eval' => ['multiple' => true, 'decodeEntities' => true, 'tl_class' => 'clr'],
-            'sql' => ['type' => 'text', 'notnull' => false],
+            'inputType' => 'select',
+            'eval' => ['tl_class' => 'w50 clr'],
+            'sql' => ['type' => 'string', 'length' => 255, 'default' => null, 'notnull' => false],
         ],
     ],
 ];

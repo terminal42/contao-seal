@@ -18,6 +18,8 @@ class AbstractProviderFactoryPass implements CompilerPassInterface
         $taggedServices = $container->findTaggedServiceIds(Terminal42ContaoSealExtension::PROVIDER_FACTORY_TAG);
         $locateableServices = [
             'contao.image.studio' => new Reference('contao.image.studio'),
+            'contao.assets.files_context' => new Reference('contao.assets.files_context'),
+            'request_stack' => new Reference('request_stack'),
         ];
 
         foreach (array_keys($taggedServices) as $id) {

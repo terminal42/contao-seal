@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Terminal42\ContaoSeal\Provider\Standard;
 
 use Terminal42\ContaoSeal\Provider\ProviderInterface;
+use Terminal42\ContaoSeal\Provider\Util;
 
 class StandardProviderFactory extends AbstractProviderFactory
 {
@@ -15,6 +16,11 @@ class StandardProviderFactory extends AbstractProviderFactory
 
     public function doCreateProvider(array $providerConfig): ProviderInterface
     {
-        return new StandardProvider($providerConfig);
+        //   dd($providerConfig);
+        return new StandardProvider(
+            Util::buildRegexFromListWizard($providerConfig['urls'] ?? ''),
+            Util::buildRegexFromListWizard($providerConfig['canonicals'] ?? ''),
+            $providerConfig['imgSize'] ?? null,
+        );
     }
 }

@@ -8,6 +8,7 @@ use Contao\BackendUser;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\CoreBundle\Image\ImageSizes;
 use Contao\CoreBundle\Twig\Finder\FinderFactory;
+use Contao\DC_Table;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Terminal42\ContaoSeal\FrontendSearch;
@@ -62,11 +63,11 @@ class SearchIndexConfigListener
     }
 
     #[AsCallback(table: 'tl_search_index_config', target: 'fields.template.options')]
-    public function getTemplateOptions(): array
+    public function getTemplateOptions(DC_Table $dc): array
     {
         return $this->finderFactory
             ->create()
-            ->identifier('frontend_search') // TODO: add provider name
+            ->identifier('frontend_search/'.$dc->getActiveRecord()['providerFactory'] ?? 'standard')
             ->withVariants()
             ->asTemplateOptions()
         ;

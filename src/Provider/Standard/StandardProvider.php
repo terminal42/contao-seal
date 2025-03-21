@@ -10,6 +10,7 @@ use CmsIg\Seal\Search\Result;
 use CmsIg\Seal\Search\SearchBuilder;
 use Contao\CoreBundle\Image\Studio\Figure;
 use Contao\CoreBundle\Search\Document;
+use Contao\Image\PictureConfiguration;
 use Symfony\Component\HttpFoundation\Request;
 use Terminal42\ContaoSeal\EngineConfig;
 use Terminal42\ContaoSeal\Provider\ProviderInterface;
@@ -17,14 +18,11 @@ use Terminal42\ContaoSeal\Provider\Util;
 
 class StandardProvider extends AbstractProvider implements ProviderInterface
 {
-    private string $urlRegex;
-
-    private string $canonicalRegex;
-
-    public function __construct(private readonly array $providerConfig)
-    {
-        $this->urlRegex = Util::buildRegexFromListWizard($this->providerConfig['urls'] ?? '');
-        $this->canonicalRegex = Util::buildRegexFromListWizard($this->providerConfig['canonicals'] ?? '');
+    public function __construct(
+        private readonly string $urlRegex,
+        private readonly string $canonicalRegex,
+        private readonly PictureConfiguration|array|int|string|null $imageSize,
+    ) {
     }
 
     public function getFieldsForSchema(): array
@@ -38,22 +36,12 @@ class StandardProvider extends AbstractProvider implements ProviderInterface
 
     public function convertDocumentToFields(Document $document): array|null
     {
-        //  TODO: Put me into abstract
-        if ($this->canonicalRegex) {
-            $canonical = (string) $document->extractCanonicalUri();
-
-            if ($canonical && !preg_match($this->canonicalRegex, $canonical)) {
-                return null;
-            }
+        if (!$this->documentMatchesUrlRegex($document, $this->urlRegex)) {
+            return null;
         }
 
-        $url = (string) $document->getUri();
-
-        //  TODO: Put me into abstract
-        if ($this->urlRegex) {
-            if (!preg_match($this->urlRegex, $url)) {
-                return null;
-            }
+        if (!$this->documentMatchesCanonicalRegex($document, $this->canonicalRegex)) {
+            return null;
         }
 
         return [
@@ -116,7 +104,7 @@ class StandardProvider extends AbstractProvider implements ProviderInterface
 
     private function createFigureFromDocument(array $document, string $url): Figure|null
     {
-        if (!isset($this->providerConfig['imgSize'])) {
+        if (null === $this->imageSize) {
             return null;
         }
 
@@ -124,7 +112,7 @@ class StandardProvider extends AbstractProvider implements ProviderInterface
             return null;
         }
 
-        return $this->createFigureBuilderFromUrl($document['image'], $this->providerConfig['imgSize'])
+        return $this->createFigureBuilderFromUrl($document['image'], $this->imageSize)
             ->setLinkHref($url)
             ->buildIfResourceExists()
         ;
