@@ -31,4 +31,9 @@ abstract class AbstractProviderFactory implements ProviderFactoryInterface
     }
 
     abstract public function doCreateProvider(array $providerConfig): ProviderInterface;
+
+    protected function getTemplate(array $providerConfig): string
+    {
+        return $providerConfig['template'] ?? \sprintf('@Contao/frontend_search/%s.html.twig', static::getName());
+    }
 }

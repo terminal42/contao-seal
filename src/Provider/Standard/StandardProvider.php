@@ -13,15 +13,15 @@ use Contao\CoreBundle\Search\Document;
 use Contao\Image\PictureConfiguration;
 use Symfony\Component\HttpFoundation\Request;
 use Terminal42\ContaoSeal\EngineConfig;
-use Terminal42\ContaoSeal\Provider\ProviderInterface;
 use Terminal42\ContaoSeal\Provider\Util;
 
-class StandardProvider extends AbstractProvider implements ProviderInterface
+class StandardProvider extends AbstractProvider
 {
     public function __construct(
         private readonly string $urlRegex,
         private readonly string $canonicalRegex,
         private readonly PictureConfiguration|array|int|string|null $imageSize,
+        private readonly string $templateName,
     ) {
     }
 
@@ -53,7 +53,7 @@ class StandardProvider extends AbstractProvider implements ProviderInterface
 
     public function getTemplateName(Request $request): string
     {
-        return '@Contao/frontend_search/standard.html.twig'; // TODO: dynamic
+        return $this->templateName;
     }
 
     public function getTemplateData(SearchBuilder $searchBuilder, Request $request): array
@@ -95,7 +95,7 @@ class StandardProvider extends AbstractProvider implements ProviderInterface
                 'image' => $this->createFigureFromDocument($document, $url),
                 'url' => $url,
                 'title' => $document['title'],
-                'context' => static::createFormattedContext($document),
+                'context' => $this->documentToContext($document),
             ];
         }
 

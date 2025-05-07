@@ -16,11 +16,11 @@ class StandardProviderFactory extends AbstractProviderFactory
 
     public function doCreateProvider(array $providerConfig): ProviderInterface
     {
-        //   dd($providerConfig);
         return new StandardProvider(
             Util::buildRegexFromListWizard($providerConfig['urls'] ?? ''),
             Util::buildRegexFromListWizard($providerConfig['canonicals'] ?? ''),
             $providerConfig['imgSize'] ?? null,
+            $this->getTemplate($providerConfig),
         );
     }
 }
