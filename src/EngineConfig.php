@@ -24,13 +24,18 @@ class EngineConfig
 
     private EngineInterface|null $engine = null;
 
+    private ProviderInterface|null $provider = null;
+
+    /**
+     * @param \Closure(): ProviderInterface $providerClosure
+     */
     private function __construct(
         private string $id,
         private string $name,
         private string $adapterName,
         private AdapterInterface $adapter,
         private string $providerFactoryName,
-        private ProviderInterface $provider,
+        private \Closure $providerClosure,
     ) {
     }
 
@@ -55,7 +60,7 @@ class EngineConfig
             return $this->engine;
         }
 
-        $fields = $this->provider->getFieldsForSchema();
+        $fields = $this->getProvider()->getFieldsForSchema();
         $fields = array_merge($fields, [
             self::DOCUMENT_ID_ATTRIBUTE_NAME => new IdentifierField(self::DOCUMENT_ID_ATTRIBUTE_NAME)]);
 
@@ -70,34 +75,40 @@ class EngineConfig
 
     public function convertDocumentToFields(Document $document): array|null
     {
-        return $this->provider->convertDocumentToFields($document);
+        return $this->getProvider()->convertDocumentToFields($document);
     }
 
-    public static function createFromDatabase(int $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, ProviderInterface $provider): self
+    /**
+     * @param \Closure(): ProviderInterface $providerClosure
+     */
+    public static function createFromDatabase(int $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, \Closure $providerClosure): self
     {
-        return new self(self::DATABASE_CONFIG_PREFIX.$id, $name, $adapterName, $adapter, $providerFactoryName, $provider);
+        return new self(self::DATABASE_CONFIG_PREFIX.$id, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
     }
 
-    public static function createFromConfig(string $configName, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, ProviderInterface $provider): self
+    /**
+     * @param \Closure(): ProviderInterface $providerClosure
+     */
+    public static function createFromConfig(string $configName, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, \Closure $providerClosure): self
     {
-        return new self(self::CONFIG_CONFIG_PREFIX.$configName, $name, $adapterName, $adapter, $providerFactoryName, $provider);
+        return new self(self::CONFIG_CONFIG_PREFIX.$configName, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
     }
 
     public function getTemplateData(Request $request): array
     {
         $searchBuilder = $this->getEngine()->createSearchBuilder($this->getIndexName());
 
-        return $this->provider->getTemplateData($searchBuilder, $request);
+        return $this->getProvider()->getTemplateData($searchBuilder, $request);
     }
 
     public function getTemplateName(Request $request): string
     {
-        return $this->provider->getTemplateName($request);
+        return $this->getProvider()->getTemplateName($request);
     }
 
     public function getDocumentId(Document $document)
     {
-        return $this->provider->getDocumentId($document);
+        return $this->getProvider()->getDocumentId($document);
     }
 
     public function getAdapterName(): string
@@ -108,5 +119,14 @@ class EngineConfig
     public function getProviderFactoryName(): string
     {
         return $this->providerFactoryName;
+    }
+
+    private function getProvider(): ProviderInterface
+    {
+        if (null === $this->provider) {
+            $this->provider = ($this->providerClosure)();
+        }
+
+        return $this->provider;
     }
 }

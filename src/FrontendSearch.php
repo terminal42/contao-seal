@@ -91,12 +91,15 @@ class FrontendSearch implements ResetInterface
      */
     public function getEngineConfigs(): array
     {
-        $createProvider = function (string $providerFactoryName, array $providerConfig): ProviderInterface {
+        /**
+         * @return \Closure<ProviderInterface>
+         */
+        $createProviderClosure = function (string $providerFactoryName, array $providerConfig): \Closure {
             if (!isset($this->providerFactories[$providerFactoryName])) {
                 throw new \InvalidArgumentException(\sprintf('Provider factory "%s" not found.', $providerFactoryName));
             }
 
-            return $this->providerFactories[$providerFactoryName]->createProvider($providerConfig);
+            return fn (): ProviderInterface => $this->providerFactories[$providerFactoryName]->createProvider($providerConfig);
         };
 
         $getAdapter = function (string $adapterName): AdapterInterface {
@@ -120,7 +123,7 @@ class FrontendSearch implements ResetInterface
                     $adapterName,
                     $getAdapter($adapterName),
                     $providerFactoryName,
-                    $createProvider($providerFactoryName, $config['providerConfig']),
+                    $createProviderClosure($providerFactoryName, $config['providerConfig']),
                 );
                 $this->indexConfigs[$config->getId()] = $config;
             }
@@ -130,7 +133,6 @@ class FrontendSearch implements ResetInterface
                 $name = $row['name'];
                 $adapterName = $row['adapter'];
                 $providerFactoryName = $row['providerFactory'];
-                $adapter = $getAdapter($adapterName);
 
                 unset($row['id'], $row['name'], $row['adapter'], $row['provider']);
 
@@ -138,9 +140,9 @@ class FrontendSearch implements ResetInterface
                     $id,
                     $name,
                     $adapterName,
-                    $adapter,
+                    $getAdapter($adapterName),
                     $providerFactoryName,
-                    $createProvider($providerFactoryName, $row),
+                    $createProviderClosure($providerFactoryName, $row),
                 );
                 $this->indexConfigs[$config->getId()] = $config;
             }
