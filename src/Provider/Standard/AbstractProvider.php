@@ -11,13 +11,13 @@ use Contao\CoreBundle\Image\Studio\Studio;
 use Contao\CoreBundle\Search\Document;
 use Contao\Image\PictureConfiguration;
 use Contao\Pagination;
-use Loupe\ContextCropper\ContextCropper;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Terminal42\ContaoSeal\Provider\ProviderInterface;
 
-abstract class AbstractProvider
+abstract class AbstractProvider implements ProviderInterface
 {
     protected ContainerInterface|null $container = null;
 
@@ -108,20 +108,16 @@ abstract class AbstractProvider
         return $figureBuilder->setSize($imageSize)->setMetadata($figureMeta);
     }
 
-    protected static function createFormattedContext(array $document, int $numberOfContextChars = 50): string
+    protected function documentToContext(array $document): string
     {
-        if (!isset($document['_formatted'])) {
-            return '';
-        }
-
         $context = [];
 
-        foreach ($document['_formatted'] as $value) {
-            $context[] = $value;
+        foreach ($this->getFieldsForSchema() as $field) {
+            if ($field->searchable && isset($document[$field->name])) {
+                $context[] = $document[$field->name];
+            }
         }
 
-        $context = implode(' ', $context);
-
-        return (new ContextCropper($numberOfContextChars))->apply($context);
+        return implode(' ', $context);
     }
 }
