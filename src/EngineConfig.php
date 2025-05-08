@@ -73,6 +73,9 @@ class EngineConfig
         );
     }
 
+    /**
+     * @return ?array<string, mixed>
+     */
     public function convertDocumentToFields(Document $document): array|null
     {
         return $this->getProvider()->convertDocumentToFields($document);
@@ -94,6 +97,9 @@ class EngineConfig
         return new self(self::CONFIG_CONFIG_PREFIX.$configName, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getTemplateData(Request $request): array
     {
         $searchBuilder = $this->getEngine()->createSearchBuilder($this->getIndexName());
@@ -106,7 +112,7 @@ class EngineConfig
         return $this->getProvider()->getTemplateName($request);
     }
 
-    public function getDocumentId(Document $document)
+    public function getDocumentId(Document $document): string
     {
         return $this->getProvider()->getDocumentId($document);
     }

@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Terminal42\ContaoSeal\DependencyInjection\Terminal42ContaoSealExtension;
-use Terminal42\ContaoSeal\Provider\Standard\AbstractProviderFactory;
+use Terminal42\ContaoSeal\Provider\AbstractProviderFactory;
 
 class AbstractProviderFactoryPass implements CompilerPassInterface
 {

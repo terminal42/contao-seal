@@ -43,6 +43,9 @@ class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function getLoupeDefaultAdapterIfSupported(): array
     {
         if (!class_exists(LoupeFactory::class)) {

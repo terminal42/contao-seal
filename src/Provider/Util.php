@@ -11,6 +11,8 @@ use Symfony\Component\DomCrawler\Crawler;
 class Util
 {
     /**
+     * @param array<mixed> $schemaData
+     *
      * @return array{contentUrl: string, ...}|null
      */
     public static function extractPrimaryImageFromSchemaOrgData(array $schemaData): array|null
@@ -76,6 +78,9 @@ class Util
         }
     }
 
+    /**
+     * @param array<string>|string $listWizard
+     * ^ */
     public static function buildRegexFromListWizard(array|string $listWizard): string
     {
         $filter = array_filter(StringUtil::deserialize($listWizard, true));
@@ -91,5 +96,35 @@ class Util
         }
 
         return '@'.implode('|', $regex).'@';
+    }
+
+    public static function documentMatchesUrlRegex(Document $document, string $regex): bool
+    {
+        if ('' === $regex) {
+            return true;
+        }
+
+        $url = (string) $document->getUri();
+
+        if ($url && !preg_match($regex, $url)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static function documentMatchesCanonicalRegex(Document $document, string $regex): bool
+    {
+        if ('' === $regex) {
+            return true;
+        }
+
+        $canonical = (string) $document->extractCanonicalUri();
+
+        if ($canonical && !preg_match($regex, $canonical)) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -13,6 +13,9 @@ class ContentListener
     {
     }
 
+    /**
+     * @return array<string, string>
+     */
     #[AsCallback('tl_content', 'fields.search_index.options')]
     public function getIndexOptions(): array
     {

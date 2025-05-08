@@ -8,5 +8,8 @@ interface ProviderFactoryInterface
 {
     public static function getName(): string;
 
+    /**
+     * @param array<mixed> $providerConfig
+     */
     public function createProvider(array $providerConfig): ProviderInterface;
 }

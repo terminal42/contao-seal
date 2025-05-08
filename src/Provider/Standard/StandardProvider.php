@@ -5,26 +5,17 @@ declare(strict_types=1);
 namespace Terminal42\ContaoSeal\Provider\Standard;
 
 use CmsIg\Seal\Schema\Field\TextField;
-use CmsIg\Seal\Search\Condition\SearchCondition;
 use CmsIg\Seal\Search\Result;
 use CmsIg\Seal\Search\SearchBuilder;
 use Contao\CoreBundle\Image\Studio\Figure;
 use Contao\CoreBundle\Search\Document;
-use Contao\Image\PictureConfiguration;
 use Symfony\Component\HttpFoundation\Request;
 use Terminal42\ContaoSeal\EngineConfig;
+use Terminal42\ContaoSeal\Provider\AbstractProvider;
 use Terminal42\ContaoSeal\Provider\Util;
 
 class StandardProvider extends AbstractProvider
 {
-    public function __construct(
-        private readonly string $urlRegex,
-        private readonly string $canonicalRegex,
-        private readonly PictureConfiguration|array|int|string|null $imageSize,
-        private readonly string $templateName,
-    ) {
-    }
-
     public function getFieldsForSchema(): array
     {
         return [
@@ -34,16 +25,23 @@ class StandardProvider extends AbstractProvider
         ];
     }
 
-    public function convertDocumentToFields(Document $document): array|null
+    public function getTemplateData(SearchBuilder $searchBuilder, Request $request): array
     {
-        if (!$this->documentMatchesUrlRegex($document, $this->urlRegex)) {
-            return null;
+        if ($this->isSubmitted($request)) {
+            $this->configureDefaultSearchBuilder($searchBuilder, $request);
+            $result = $searchBuilder->getResult();
+        } else {
+            $result = Result::createEmpty();
         }
 
-        if (!$this->documentMatchesCanonicalRegex($document, $this->canonicalRegex)) {
-            return null;
-        }
+        return array_merge($this->getDefaultTemplateData($request), [
+            'results' => $this->formatResult($result),
+            'pagination' => $this->getPagination($result->total()),
+        ]);
+    }
 
+    protected function doConvertDocumentToFields(Document $document): array
+    {
         return [
             'title' => Util::extractTitleFromDocument($document),
             'content' => Util::extractSearchableContentFromDocument($document),
@@ -51,40 +49,14 @@ class StandardProvider extends AbstractProvider
         ];
     }
 
-    public function getTemplateName(Request $request): string
-    {
-        return $this->templateName;
-    }
-
-    public function getTemplateData(SearchBuilder $searchBuilder, Request $request): array
-    {
-        $queryParam = 'keywords'; // TODO: configurable in config?
-        $query = $request->query->get($queryParam, '');
-        $currentPageParam = 'page_s'; // TODO: append provider config id somehow
-        //  $currentPage = $request->query->get($currentPageParam, 1); // TODO: use me
-        $perPage = 10; // TODO: configurable?
-
-        if ($query) {
-            $result = $searchBuilder
-                ->addFilter(new SearchCondition($query))
-                ->highlight(['title', 'content'])
-                ->limit(10)
-                ->offset(0)
-                ->getResult()
-            ;
-        } else {
-            $result = Result::createEmpty();
-        }
-
-        return [
-            'queryParam' => $queryParam,
-            'query' => $query,
-            'isSubmitted' => $request->query->has($queryParam),
-            'results' => $this->formatResult($result),
-            'pagination' => $this->getPagination($result->total(), $perPage, $currentPageParam),
-        ];
-    }
-
+    /**
+     * @return array<int, array{
+     *     image: Figure|null,
+     *     url: string,
+     *     title: string,
+     *     context: string
+     * }>
+     */
     private function formatResult(Result $result): array
     {
         $results = [];
@@ -102,17 +74,16 @@ class StandardProvider extends AbstractProvider
         return $results;
     }
 
+    /**
+     * @param array<string, mixed> $document
+     */
     private function createFigureFromDocument(array $document, string $url): Figure|null
     {
-        if (null === $this->imageSize) {
-            return null;
-        }
-
         if (!isset($document['image'])) {
             return null;
         }
 
-        return $this->createFigureBuilderFromUrl($document['image'], $this->imageSize)
+        return $this->createFigureBuilderFromUrl($document['image'])
             ->setLinkHref($url)
             ->buildIfResourceExists()
         ;

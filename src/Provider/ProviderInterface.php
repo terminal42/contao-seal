@@ -23,6 +23,9 @@ interface ProviderInterface
 
     public function getTemplateName(Request $request): string;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getTemplateData(SearchBuilder $searchBuilder, Request $request): array;
 
     public function getDocumentId(Document $document): string;

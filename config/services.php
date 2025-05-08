@@ -7,7 +7,7 @@ use Terminal42\ContaoSeal\Controller\SearchController;
 use Terminal42\ContaoSeal\FrontendSearch;
 use Terminal42\ContaoSeal\Indexer\SealDelegatingIndexer;
 use Terminal42\ContaoSeal\Provider\Standard\StandardProviderFactory;
-use Terminal42\ContaoSeal\Twig\Extension\FormatContextExtension;
+use Terminal42\ContaoSeal\Twig\Extension\CropContextExtension;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -41,5 +41,5 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
     $services->set(StandardProviderFactory::class);
 
-    $services->set(FormatContextExtension::class);
+    $services->set(CropContextExtension::class);
 };

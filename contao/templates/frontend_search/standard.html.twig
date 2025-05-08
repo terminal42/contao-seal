@@ -39,13 +39,7 @@
                             {# Result context #}
                             {% block result_context %}
                                 {% if result.context %}
-                                    <p class="context">{{ result.context|seal_format_context(query, {
-                                            enable_crop: true,
-                                            crop_length: 30,
-                                            enable_highlight: true,
-                                            highlight_start_tag: '<em>',
-                                            highlight_end_tag: '</em>',
-                                        })|raw }}</p>
+                                    <p class="context">{{ result.context|crop_context(50, highlightTag)|raw }}</p>
                                 {% endif %}
                             {% endblock %}
 

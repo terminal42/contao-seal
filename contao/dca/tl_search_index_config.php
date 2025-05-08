@@ -36,16 +36,16 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
     'palettes' => [
         '__selector__' => ['providerFactory'],
         'default' => '{title_legend},name;{config_legend},adapter,providerFactory;',
-        'standard' => '{title_legend},name;{config_legend},adapter,providerFactory;{provider_config},urls,canonicals;{image_legend},imgSize;{template_legend},template;',
+        'standard' => '{title_legend},name;{config_legend},adapter,providerFactory;{provider_general_config},queryParameter,perPage,highlightTag,urls,canonicals;{image_legend},imgSize;{template_legend},template;',
     ],
 
     // Fields
     'fields' => [
         'id' => [
-            'sql' => 'int(10) unsigned NOT NULL auto_increment',
+            'sql' => ['type' => 'integer', 'unsigned' => true, 'autoincrement' => true],
         ],
         'tstamp' => [
-            'sql' => 'int(10) unsigned NOT NULL default 0',
+            'sql' => ['type' => 'integer', 'unsigned' => true, 'default' => 0],
         ],
         'name' => [
             'search' => true,
@@ -59,19 +59,35 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
             'sql' => ['type' => 'string', 'length' => 255, 'default' => ''],
         ],
         'providerFactory' => [
-            'search' => true,
+            'filter' => true,
             'inputType' => 'select',
             'eval' => ['mandatory' => true, 'includeBlankOption' => true, 'tl_class' => 'w50', 'submitOnChange' => true],
             'sql' => ['type' => 'string', 'length' => 255, 'default' => ''],
         ],
+        'queryParameter' => [
+            'inputType' => 'text',
+            'eval' => ['mandatory' => true, 'tl_class' => 'w33'],
+            'sql' => ['type' => 'string', 'length' => 32, 'default' => 'keywords'],
+        ],
+        'perPage' => [
+            'inputType' => 'text',
+            'eval' => ['mandatory' => true, 'tl_class' => 'w33', 'rgxp' => 'natural'],
+            'sql' => ['type' => 'integer', 'unsigned' => true, 'default' => 10],
+        ],
+        'highlightTag' => [
+            'inputType' => 'select',
+            'options' => ['em', 'mark', 'strong'],
+            'eval' => ['mandatory' => true, 'tl_class' => 'w33'],
+            'sql' => ['type' => 'string', 'length' => 8, 'default' => 'em'],
+        ],
         'urls' => [
             'inputType' => 'listWizard',
-            'eval' => ['multiple' => true, 'decodeEntities' => true, 'tl_class' => 'clr'],
+            'eval' => ['multiple' => true, 'decodeEntities' => true, 'tl_class' => 'w33 clr'],
             'sql' => ['type' => 'text', 'notnull' => false],
         ],
         'canonicals' => [
             'inputType' => 'listWizard',
-            'eval' => ['multiple' => true, 'decodeEntities' => true, 'tl_class' => 'clr'],
+            'eval' => ['multiple' => true, 'decodeEntities' => true, 'tl_class' => 'w33'],
             'sql' => ['type' => 'text', 'notnull' => false],
         ],
         'imgSize' => [

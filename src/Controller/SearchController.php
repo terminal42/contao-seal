@@ -30,7 +30,7 @@ class SearchController extends AbstractContentElementController
 
     protected function getResponse(FragmentTemplate $template, ContentModel $model, Request $request): Response
     {
-        $configId = (string) $model->search_index ?? '';
+        $configId = (string) $model->search_index ?: '';
 
         if ('' === $configId) {
             return new Response();

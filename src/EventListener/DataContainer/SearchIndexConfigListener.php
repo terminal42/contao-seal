@@ -24,6 +24,9 @@ class SearchIndexConfigListener
     ) {
     }
 
+    /**
+     * @return array<string, array<string>>
+     */
     #[AsCallback(table: 'tl_search_index_config', target: 'fields.imgSize.options')]
     public function __invoke(): array
     {
@@ -36,6 +39,9 @@ class SearchIndexConfigListener
         return $this->imageSizes->getOptionsForUser($user);
     }
 
+    /**
+     * @return array<string, string>
+     */
     #[AsCallback('tl_search_index_config', 'fields.adapter.options')]
     public function getConfigAdapterOptions(): array
     {
@@ -49,6 +55,9 @@ class SearchIndexConfigListener
         return $options;
     }
 
+    /**
+     * @return array<string, string>
+     */
     #[AsCallback('tl_search_index_config', 'fields.providerFactory.options')]
     public function getProviderFactoryOptions(): array
     {
@@ -62,12 +71,15 @@ class SearchIndexConfigListener
         return $options;
     }
 
+    /**
+     * @return array<string, string>
+     */
     #[AsCallback(table: 'tl_search_index_config', target: 'fields.template.options')]
     public function getTemplateOptions(DC_Table $dc): array
     {
         return $this->finderFactory
             ->create()
-            ->identifier('frontend_search/'.$dc->getActiveRecord()['providerFactory'] ?? 'standard')
+            ->identifier('frontend_search/'.($dc->getActiveRecord()['providerFactory'] ?? 'standard'))
             ->withVariants()
             ->asTemplateOptions()
         ;

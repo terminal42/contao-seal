@@ -15,6 +15,9 @@ use Terminal42\ContaoSeal\Provider\ProviderInterface;
 
 class FrontendSearch implements ResetInterface
 {
+    /**
+     * @var array<string, EngineConfig>|null
+     */
     private array|null $indexConfigs = null;
 
     /**
@@ -22,19 +25,25 @@ class FrontendSearch implements ResetInterface
      */
     private array $providerFactories;
 
+    /**
+     * @param array<mixed>                            $configs
+     * @param array<string, AdapterInterface>         $adapters
+     * @param array<string, ProviderFactoryInterface> $providerFactories
+     */
     public function __construct(
         private readonly Connection $connection,
         private readonly TranslatorInterface $translator,
-        /** @var<string, array<mixed>> */
         private readonly array $configs,
-        /** @var array<string, AdapterInterface> */
         private readonly array $adapters,
         iterable $providerFactories,
     ) {
         $this->providerFactories = iterator_to_array($providerFactories);
     }
 
-    public function getProviderTemplateData(string $configId, Request $request)
+    /**
+     * @return array<string, mixed>
+     */
+    public function getProviderTemplateData(string $configId, Request $request): array
     {
         $config = $this->getEngineConfigForId($configId);
 
