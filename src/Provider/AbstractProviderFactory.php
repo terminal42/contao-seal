@@ -19,8 +19,8 @@ abstract class AbstractProviderFactory implements ProviderFactoryInterface
 
     public function createProvider(array $providerConfig): ProviderInterface
     {
-        $defaultProviderConfig = $this->createGeneralProviderConfig($providerConfig);
-        $provider = $this->doCreateProvider($providerConfig, $defaultProviderConfig);
+        $generalProviderConfig = $this->createGeneralProviderConfig($providerConfig);
+        $provider = $this->doCreateProvider($providerConfig, $generalProviderConfig);
 
         if ($provider instanceof AbstractProvider) {
             $provider->setContainer($this->container);
@@ -65,5 +65,5 @@ abstract class AbstractProviderFactory implements ProviderFactoryInterface
     /**
      * @param array<mixed> $providerConfig
      */
-    abstract protected function doCreateProvider(array $providerConfig, GeneralProviderConfig $defaultProviderConfig): ProviderInterface;
+    abstract protected function doCreateProvider(array $providerConfig, GeneralProviderConfig $generalProviderConfig): ProviderInterface;
 }

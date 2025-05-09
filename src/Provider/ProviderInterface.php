@@ -12,6 +12,11 @@ use Symfony\Component\HttpFoundation\Request;
 interface ProviderInterface
 {
     /**
+     * @return array<mixed>
+     */
+    public function getProviderConfig(): array;
+
+    /**
      * @return array<string, AbstractField>
      */
     public function getFieldsForSchema(): array;

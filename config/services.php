@@ -19,6 +19,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $services->set(FrontendSearch::class)
         ->args([
             service('database_connection'),
+            service('event_dispatcher'),
             service('translator'),
             [], // Configs set by extension
             [], // Adapters set by extension

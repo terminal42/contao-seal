@@ -17,6 +17,6 @@ class StandardProviderFactory extends AbstractProviderFactory
 
     public function doCreateProvider(array $providerConfig, GeneralProviderConfig $generalProviderConfig): ProviderInterface
     {
-        return new StandardProvider($generalProviderConfig);
+        return new StandardProvider($providerConfig, $generalProviderConfig);
     }
 }

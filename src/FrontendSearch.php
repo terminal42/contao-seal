@@ -7,11 +7,13 @@ namespace Terminal42\ContaoSeal;
 use CmsIg\Seal\Adapter\AdapterInterface;
 use Contao\CoreBundle\Search\Document;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Service\ResetInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Terminal42\ContaoSeal\Provider\ProviderFactoryInterface;
 use Terminal42\ContaoSeal\Provider\ProviderInterface;
+use Terminal42\ContaoSeal\Seal\EventDispatchingAdapter;
 
 class FrontendSearch implements ResetInterface
 {
@@ -32,6 +34,7 @@ class FrontendSearch implements ResetInterface
      */
     public function __construct(
         private readonly Connection $connection,
+        private readonly EventDispatcherInterface $eventDispatcher,
         private readonly TranslatorInterface $translator,
         private readonly array $configs,
         private readonly array $adapters,
@@ -111,26 +114,31 @@ class FrontendSearch implements ResetInterface
             return fn (): ProviderInterface => $this->providerFactories[$providerFactoryName]->createProvider($providerConfig);
         };
 
-        $getAdapter = function (string $adapterName): AdapterInterface {
+        $getAdapter = function (string $adapterName, string $configId): AdapterInterface {
             if (!isset($this->adapters[$adapterName])) {
                 throw new \InvalidArgumentException(\sprintf('Adapter "%s" not found.', $adapterName));
             }
 
-            return $this->adapters[$adapterName];
+            return new EventDispatchingAdapter(
+                $this->adapters[$adapterName],
+                $this->eventDispatcher,
+                $configId,
+            );
         };
 
         if (null === $this->indexConfigs) {
             $this->indexConfigs = [];
 
             foreach ($this->configs as $configName => $config) {
+                $configId = EngineConfig::CONFIG_CONFIG_PREFIX.$configName;
                 $adapterName = $config['adapter'];
                 $providerFactoryName = $config['providerFactory'];
 
                 $config = EngineConfig::createFromConfig(
-                    $configName,
+                    $configId,
                     $this->translator->trans('tl_search_index_config.index.'.$configName, [], 'contao_tl_search_index_config'),
                     $adapterName,
-                    $getAdapter($adapterName),
+                    $getAdapter($adapterName, $configName),
                     $providerFactoryName,
                     $createProviderClosure($providerFactoryName, $config['providerConfig']),
                 );
@@ -138,7 +146,7 @@ class FrontendSearch implements ResetInterface
             }
 
             foreach ($this->connection->fetchAllAssociative('SELECT * FROM tl_search_index_config') as $row) {
-                $id = (int) $row['id'];
+                $configId = EngineConfig::DATABASE_CONFIG_PREFIX.((int) $row['id']);
                 $name = $row['name'];
                 $adapterName = $row['adapter'];
                 $providerFactoryName = $row['providerFactory'];
@@ -146,10 +154,10 @@ class FrontendSearch implements ResetInterface
                 unset($row['id'], $row['name'], $row['adapter'], $row['provider']);
 
                 $config = EngineConfig::createFromDatabase(
-                    $id,
+                    $configId,
                     $name,
                     $adapterName,
-                    $getAdapter($adapterName),
+                    $getAdapter($adapterName, $configId),
                     $providerFactoryName,
                     $createProviderClosure($providerFactoryName, $row),
                 );
@@ -163,7 +171,7 @@ class FrontendSearch implements ResetInterface
     /**
      * @throws \InvalidArgumentException If config does not exist
      */
-    private function getEngineConfigForId(string $configId): EngineConfig
+    public function getEngineConfigForId(string $configId): EngineConfig
     {
         $config = $this->getEngineConfigs()[$configId] ?? null;
 

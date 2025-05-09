@@ -10,6 +10,7 @@ use CmsIg\Seal\EngineInterface;
 use CmsIg\Seal\Schema\Field\IdentifierField;
 use CmsIg\Seal\Schema\Index;
 use CmsIg\Seal\Schema\Schema;
+use CmsIg\Seal\Search\SearchBuilder;
 use Contao\CoreBundle\Search\Document;
 use Symfony\Component\HttpFoundation\Request;
 use Terminal42\ContaoSeal\Provider\ProviderInterface;
@@ -18,9 +19,9 @@ class EngineConfig
 {
     public const DOCUMENT_ID_ATTRIBUTE_NAME = 'document_id';
 
-    private const DATABASE_CONFIG_PREFIX = 'db_';
+    public const DATABASE_CONFIG_PREFIX = 'db_';
 
-    private const CONFIG_CONFIG_PREFIX = '_';
+    public const CONFIG_CONFIG_PREFIX = '_';
 
     private EngineInterface|null $engine = null;
 
@@ -84,17 +85,17 @@ class EngineConfig
     /**
      * @param \Closure(): ProviderInterface $providerClosure
      */
-    public static function createFromDatabase(int $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, \Closure $providerClosure): self
+    public static function createFromDatabase(string $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, \Closure $providerClosure): self
     {
-        return new self(self::DATABASE_CONFIG_PREFIX.$id, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
+        return new self($id, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
     }
 
     /**
      * @param \Closure(): ProviderInterface $providerClosure
      */
-    public static function createFromConfig(string $configName, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, \Closure $providerClosure): self
+    public static function createFromConfig(string $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, \Closure $providerClosure): self
     {
-        return new self(self::CONFIG_CONFIG_PREFIX.$configName, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
+        return new self($id, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
     }
 
     /**
@@ -102,9 +103,12 @@ class EngineConfig
      */
     public function getTemplateData(Request $request): array
     {
-        $searchBuilder = $this->getEngine()->createSearchBuilder($this->getIndexName());
+        return $this->getProvider()->getTemplateData($this->createSearchBuilder(), $request);
+    }
 
-        return $this->getProvider()->getTemplateData($searchBuilder, $request);
+    public function createSearchBuilder(): SearchBuilder
+    {
+        return $this->getEngine()->createSearchBuilder($this->getIndexName());
     }
 
     public function getTemplateName(Request $request): string

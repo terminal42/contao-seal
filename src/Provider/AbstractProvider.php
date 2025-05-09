@@ -23,8 +23,21 @@ abstract class AbstractProvider implements ProviderInterface
 {
     protected ContainerInterface|null $container = null;
 
-    public function __construct(private GeneralProviderConfig $generalProviderConfig)
+    /**
+     * @param array<mixed> $providerConfig
+     */
+    public function __construct(
+        private array $providerConfig,
+        private GeneralProviderConfig $generalProviderConfig,
+    ) {
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function getProviderConfig(): array
     {
+        return $this->providerConfig;
     }
 
     public function setContainer(ContainerInterface $container): self
