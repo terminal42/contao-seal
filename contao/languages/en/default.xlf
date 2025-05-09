@@ -3,7 +3,6 @@
         <body>
             <trans-unit id="MSC.page">
                 <source>Page %d</source>
-                <target>Page %d</target>
             </trans-unit>
         </body>
     </file>

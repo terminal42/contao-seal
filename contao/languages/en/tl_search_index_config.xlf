@@ -4,11 +4,87 @@
     <body>
       <trans-unit id="tl_search_index_config.adapters.loupe_default">
         <source>Loupe (Default)</source>
-        <target>Loupe (Default)</target>
       </trans-unit>
       <trans-unit id="tl_search_index_config.provider_factory.standard">
         <source>Standard</source>
-        <target>Standard</target>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.title_legend">
+        <source>Title</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.config_legend">
+        <source>Adapter and provider</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.provider_general_config_legend">
+        <source>General provider settings</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.provider_specific_config_legend">
+        <source>Provider specific settings</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.image_legend">
+        <source>Image settings</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.template_legend">
+        <source>Template settings</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.name.0">
+        <source>Index name</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.name.1">
+        <source>Here you can give your index a name, it is only used in the backend.</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.adapter.0">
+        <source>Search adapter</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.adapter.1">
+        <source>Choose the desired search adapter, they have to be configured by the system administrator.</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.providerFactory.0">
+        <source>Provider</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.providerFactory.1">
+        <source>Third party extensions might offer their own providers, select the one you would like to create a search index for.</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.queryParameter.0">
+        <source>Query parameter</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.queryParameter.1">
+        <source>Here you can configure which query parameter should be used for the search query.</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.perPage.0">
+        <source>Results per page</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.perPage.1">
+        <source>Here you can configure the number of results per page.</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.highlightTag.0">
+        <source>Highlight tag</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.highlightTag.1">
+        <source>Terms matching the query can be highlighted, configure your desired HTML tag here.</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.urls.0">
+        <source>URL filter</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.urls.1">
+        <source>If you are only interested in certain URLs for this search index, configure the filters using regular expressions here. (e.g. "domain\.com").</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.canonicals.0">
+        <source>Canonical URL filter</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.canonicals.1">
+        <source>If you are only interested in certain Canonical URLs for this search index, configure the filters using regular expressions here. (e.g. "domain\.com").</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.imgSize.0">
+        <source>Image size</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.imgSize.1">
+        <source>Some search results might contain a preview image, choose the appropriate image size for them here.</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.template.0">
+        <source>Template</source>
+      </trans-unit>
+      <trans-unit id="tl_search_index_config.template.1">
+        <source>Choose your own template here in case you want to override the default one.</source>
       </trans-unit>
     </body>
   </file>
