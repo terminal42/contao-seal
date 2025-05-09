@@ -98,7 +98,7 @@ $GLOBALS['TL_DCA']['tl_search_index_config'] =
         ],
         'template' => [
             'inputType' => 'select',
-            'eval' => ['tl_class' => 'w50 clr'],
+            'eval' => ['includeBlankOption' => true, 'tl_class' => 'w50 clr'],
             'sql' => ['type' => 'string', 'length' => 255, 'default' => null, 'notnull' => false],
         ],
     ],

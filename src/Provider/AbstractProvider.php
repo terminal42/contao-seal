@@ -103,6 +103,8 @@ abstract class AbstractProvider implements ProviderInterface
             'offset' => $this->getOffset($request),
             'highlightTag' => $this->generalProviderConfig->getHighlightTag(),
             'isSubmitted' => $this->isSubmitted($request),
+            'previous_link' => null,
+            'next_link' => null,
         ];
     }
 

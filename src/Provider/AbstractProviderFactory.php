@@ -59,7 +59,7 @@ abstract class AbstractProviderFactory implements ProviderFactoryInterface
      */
     protected function getTemplate(array $providerConfig): string
     {
-        return $providerConfig['template'] ?? \sprintf('@Contao/frontend_search/%s.html.twig', static::getName());
+        return $providerConfig['template'] ?? \sprintf('@Contao/frontend_search/provider/%s.html.twig', static::getName());
     }
 
     /**

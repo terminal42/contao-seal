@@ -79,7 +79,7 @@ class SearchIndexConfigListener
     {
         return $this->finderFactory
             ->create()
-            ->identifier('frontend_search/'.($dc->getActiveRecord()['providerFactory'] ?? 'standard'))
+            ->identifier('frontend_search/provider/'.($dc->getActiveRecord()['providerFactory'] ?? 'standard'))
             ->withVariants()
             ->asTemplateOptions()
         ;

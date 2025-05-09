@@ -1,0 +1,55 @@
+{#
+This component outputs a pagination for search results.
+DO NOT try to create a pagination that requires the knowledge of the exact number of results.
+Search engines rarely tell you the exact number of hits. Only ever implement previous and next links.
+
+    <nav class="pagination">
+        <ul>
+          <li class="prev"><a href="..." title="...">...</a></li>
+          <li class="current">.../li>
+          <li class="next"><a href="..." title="...">...</a></li>
+        </ul>
+    </nav>
+
+Optional variables:
+    @var string previous_link
+    @var string next_link
+    @var string nav_tag_name
+    @var string list_tag_name
+    @var bool show_current_page_if_no_links
+    @var \Contao\CoreBundle\String\HtmlAttributes nav_attributes
+    @var \Contao\CoreBundle\String\HtmlAttributes previous_attributes
+    @var \Contao\CoreBundle\String\HtmlAttributes current_attributes
+    @var \Contao\CoreBundle\String\HtmlAttributes next_attributes
+#}
+
+{% trans_default_domain 'contao_default' %}
+
+{% block pagination_component %}
+    {% set nav_tag_name = nav_tag_name|default('nav') %}
+    {% set nav_attributes = attrs(nav_attributes|default).addClass('pagination') %}
+    {% set list_tag_name = list_tag_name|default('ul') %}
+    {% set list_attributes = attrs(list_attributes|default) %}
+    {% set previous_attributes = attrs(previous_attributes|default) %}
+    {% set current_attributes = attrs(current_attributes|default) %}
+    {% set next_attributes = attrs(next_attributes|default) %}
+    {% set show_current_page_if_no_links = show_current_page_if_no_links ?? false %}
+
+    {% if previous_link or next_link or show_current_page_if_no_links %}
+        <{{ nav_tag_name }}{{ nav_attributes }}>
+            <{{ list_tag_name }}{{ list_attributes }}>
+
+            {% if previous_link %}
+                <li{{ previous_attributes }}><a href="{{ previous_link }}">{{ 'MSC\.previous'|trans }}</a></li>
+            {% endif %}
+
+                <li{{ current_attributes }}>{{ 'MSC.page'|trans([page]) }}</li>
+
+            {% if next_link %}
+                <li{{ next_attributes }}><a href="{{ next_link }}">{{ 'MSC\.next'|trans }}</a></li>
+            {% endif %}
+
+            </{{ list_tag_name }}>
+        </{{ nav_tag_name }}>
+    {% endif %}
+{% endblock %}
