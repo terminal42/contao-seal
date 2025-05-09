@@ -12,7 +12,6 @@ use Contao\CoreBundle\Image\Studio\FigureBuilder;
 use Contao\CoreBundle\Image\Studio\Studio;
 use Contao\CoreBundle\Search\Document;
 use Contao\Image\PictureConfiguration;
-use Contao\Pagination;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -70,19 +69,44 @@ abstract class AbstractProvider implements ProviderInterface
         return (string) $document->getUri();
     }
 
-    protected function configureDefaultSearchBuilder(SearchBuilder $searchBuilder, Request $request): void
+    public function getTemplateData(SearchBuilder $searchBuilder, Request $request): array
     {
-        $searchBuilder
-            ->addFilter(new SearchCondition($this->getQuery($request)))
-            ->limit($this->generalProviderConfig->getPerPage())
-            ->offset($this->getOffset($request))
-            ->highlight(
-                $this->getSearchableFields(),
-                \sprintf('<%s>', $this->generalProviderConfig->getHighlightTag()),
-                \sprintf('</%s>', $this->generalProviderConfig->getHighlightTag()),
-            )
-        ;
+        $showNextLink = false;
+
+        if ($this->isSubmitted($request)) {
+            $searchBuilder
+                ->addFilter(new SearchCondition($this->getQuery($request)))
+                ->limit($this->generalProviderConfig->getPerPage() + 1) // Request one more for the pagination
+                ->offset($this->getOffset($request))
+                ->highlight(
+                    $this->getSearchableFields(),
+                    \sprintf('<%s>', $this->generalProviderConfig->getHighlightTag()),
+                    \sprintf('</%s>', $this->generalProviderConfig->getHighlightTag()),
+                )
+            ;
+
+            $results = iterator_to_array($searchBuilder->getResult());
+
+            if (\count($results) > $this->generalProviderConfig->getPerPage()) {
+                $showNextLink = true;
+                $results = \array_slice($results, 0, $this->generalProviderConfig->getPerPage());
+            }
+        } else {
+            $results = [];
+        }
+
+        return array_merge($this->getDefaultTemplateData($request), [
+            'results' => $this->formatResults($results),
+            'pagination' => $this->getPagination($request, $showNextLink),
+        ]);
     }
+
+    /**
+     * @param array<array<string, mixed>> $results
+     *
+     * @return array<array<string, mixed>>
+     */
+    abstract protected function formatResults(array $results): array;
 
     /**
      * @return array{
@@ -103,8 +127,6 @@ abstract class AbstractProvider implements ProviderInterface
             'offset' => $this->getOffset($request),
             'highlightTag' => $this->generalProviderConfig->getHighlightTag(),
             'isSubmitted' => $this->isSubmitted($request),
-            'previous_link' => null,
-            'next_link' => null,
         ];
     }
 
@@ -149,11 +171,30 @@ abstract class AbstractProvider implements ProviderInterface
         return $this->container->get($name);
     }
 
-    protected function getPagination(int $total): string
+    /**
+     * @return array{
+     *     page: int,
+     *     previous_link: ?string,
+     *     next_link: ?string,
+     * }
+     */
+    protected function getPagination(Request $request, bool $showNextLink): array
     {
-        // TODO: convert to a more flexible, nicer solution once Contao migrates to a new Pagination logic
-        // should be done in the template as well
-        return (new Pagination($total, $this->generalProviderConfig->getPerPage(), 7, $this->generalProviderConfig->getPageParameter()))->generate("\n  ");
+        $pagination = [
+            'page' => $this->getCurrentPage($request),
+            'previous_link' => null,
+            'next_link' => null,
+        ];
+
+        if ($this->getCurrentPage($request) > 1) {
+            $pagination['previous_link'] = Util::linkToPage($request, $this->generalProviderConfig->getPageParameter(), $this->getCurrentPage($request) - 1);
+        }
+
+        if ($showNextLink) {
+            $pagination['next_link'] = Util::linkToPage($request, $this->generalProviderConfig->getPageParameter(), $this->getCurrentPage($request) + 1);
+        }
+
+        return $pagination;
     }
 
     /**

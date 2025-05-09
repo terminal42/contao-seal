@@ -29,13 +29,12 @@ class EventDispatchingSearcher implements SearcherInterface
         $finalResults = [];
 
         do {
-            $result = $this->searcher->search($search);
+            $results = iterator_to_array($this->searcher->search($search));
 
-            if (0 === $result->total()) {
+            if (0 === \count($results)) {
                 break;
             }
 
-            $results = iterator_to_array($result);
             $event = new ModifySearchResultEvent($results, $search, $this->configId);
             $this->eventDispatcher->dispatch($event);
             $finalResults = array_merge($finalResults, $event->getResults());

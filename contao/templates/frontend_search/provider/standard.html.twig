@@ -1,7 +1,6 @@
 {% trans_default_domain "contao_default" %}
 {% set uniqueId = element_html_id ? element_html_id : ('search_' ~ data.id) %}
 {% use "@Contao/component/_figure.html.twig" %}
-{% use "@Contao/frontend_search/component/_pagination.html.twig" %}
 
 {% block form %}
     <form method="get">
@@ -53,7 +52,7 @@
                 {% endblock %}
 
                 {% block pagination %}
-                    {{ block('pagination_component') }}
+                    {% include '@Contao/frontend_search/component/_pagination.html.twig' with pagination only %}
                 {% endblock %}
             {% endif %}
         {% endblock %}

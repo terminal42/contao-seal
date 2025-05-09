@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace Terminal42\ContaoSeal\Provider\Standard;
 
 use CmsIg\Seal\Schema\Field\TextField;
-use CmsIg\Seal\Search\Result;
-use CmsIg\Seal\Search\SearchBuilder;
 use Contao\CoreBundle\Image\Studio\Figure;
 use Contao\CoreBundle\Search\Document;
-use Symfony\Component\HttpFoundation\Request;
 use Terminal42\ContaoSeal\EngineConfig;
 use Terminal42\ContaoSeal\Provider\AbstractProvider;
 use Terminal42\ContaoSeal\Provider\Util;
@@ -25,21 +22,6 @@ class StandardProvider extends AbstractProvider
         ];
     }
 
-    public function getTemplateData(SearchBuilder $searchBuilder, Request $request): array
-    {
-        if ($this->isSubmitted($request)) {
-            $this->configureDefaultSearchBuilder($searchBuilder, $request);
-            $result = $searchBuilder->getResult();
-        } else {
-            $result = Result::createEmpty();
-        }
-
-        return array_merge($this->getDefaultTemplateData($request), [
-            'results' => $this->formatResult($result),
-            'pagination' => $this->getPagination($result->total()),
-        ]);
-    }
-
     protected function doConvertDocumentToFields(Document $document): array
     {
         return [
@@ -50,6 +32,8 @@ class StandardProvider extends AbstractProvider
     }
 
     /**
+     * @param array<array<string, mixed>> $results
+     *
      * @return array<int, array{
      *     image: Figure|null,
      *     url: string,
@@ -57,13 +41,13 @@ class StandardProvider extends AbstractProvider
      *     context: string
      * }>
      */
-    private function formatResult(Result $result): array
+    protected function formatResults(array $results): array
     {
-        $results = [];
+        $formatted = [];
 
-        foreach ($result as $document) {
+        foreach ($results as $document) {
             $url = $document[EngineConfig::DOCUMENT_ID_ATTRIBUTE_NAME];
-            $results[] = [
+            $formatted[] = [
                 'image' => $this->createFigureFromDocument($document, $url),
                 'url' => $url,
                 'title' => $document['title'],
@@ -71,7 +55,7 @@ class StandardProvider extends AbstractProvider
             ];
         }
 
-        return $results;
+        return $formatted;
     }
 
     /**

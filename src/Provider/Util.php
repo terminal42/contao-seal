@@ -7,6 +7,7 @@ namespace Terminal42\ContaoSeal\Provider;
 use Contao\CoreBundle\Search\Document;
 use Contao\StringUtil;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\HttpFoundation\Request;
 
 class Util
 {
@@ -126,5 +127,29 @@ class Util
         }
 
         return true;
+    }
+
+    public static function linkToPage(Request $request, string $pageParameter, int $targetPage): string
+    {
+        $parts = parse_url($request->getUri());
+        parse_str($parts['query'] ?? '', $query);
+
+        unset($query[$pageParameter]);
+
+        if ($targetPage > 1) {
+            $query[$pageParameter] = $targetPage;
+        }
+
+        $queryString = http_build_query($query, '', '&');
+
+        $scheme = $parts['scheme'] ?? 'http';
+        $host = $parts['host'] ?? '';
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+        $user = $parts['user'] ?? '';
+        $pass = isset($parts['pass']) ? ':'.$parts['pass'] : '';
+        $auth = $user ? "$user$pass@" : '';
+        $path = $parts['path'] ?? '';
+
+        return "$scheme://$auth$host$port$path".($queryString ? "?$queryString" : '');
     }
 }
