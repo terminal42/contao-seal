@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Terminal42\ContaoSeal\Provider;
 
+use CmsIg\Seal\Schema\Field\AbstractField;
+use CmsIg\Seal\Schema\Field\BooleanField;
+use CmsIg\Seal\Schema\Field\IntegerField;
+use CmsIg\Seal\Search\Condition\AndCondition;
+use CmsIg\Seal\Search\Condition\EqualCondition;
+use CmsIg\Seal\Search\Condition\InCondition;
+use CmsIg\Seal\Search\Condition\OrCondition;
 use CmsIg\Seal\Search\Condition\SearchCondition;
 use CmsIg\Seal\Search\SearchBuilder;
 use Contao\CoreBundle\Asset\ContaoContext;
@@ -11,12 +18,14 @@ use Contao\CoreBundle\File\Metadata;
 use Contao\CoreBundle\Image\Studio\FigureBuilder;
 use Contao\CoreBundle\Image\Studio\Studio;
 use Contao\CoreBundle\Search\Document;
+use Contao\FrontendUser;
 use Contao\Image\PictureConfiguration;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 abstract class AbstractProvider implements ProviderInterface
 {
@@ -46,6 +55,17 @@ abstract class AbstractProvider implements ProviderInterface
         return $this;
     }
 
+    public function getFieldsForSchema(): array
+    {
+        return array_merge(
+            [
+                'protected' => new BooleanField('protected', filterable: true),
+                'groups' => new IntegerField('groups', multiple: true, filterable: true),
+            ],
+            $this->doGetFieldsForSchema(),
+        );
+    }
+
     public function getTemplateName(Request $request): string
     {
         return $this->generalProviderConfig->getTemplateName();
@@ -61,7 +81,26 @@ abstract class AbstractProvider implements ProviderInterface
             return null;
         }
 
-        return $this->doConvertDocumentToFields($document);
+        $meta = Util::extractContaoSchemaMeta($document);
+
+        // If search was disabled in the page settings, we do not index
+        if (isset($meta['noSearch']) && true === $meta['noSearch']) {
+            return null;
+        }
+
+        // If the front end preview is activated, we do not index
+        if (isset($meta['fePreview']) && true === $meta['fePreview']) {
+            return null;
+        }
+
+        $convertedDocument = ['groups' => [], 'protected' => false];
+
+        if (isset($meta['protected'], $meta['groups']) && true === $meta['protected'] && \is_array($meta['groups'])) {
+            $convertedDocument['groups'] = $meta['groups'];
+            $convertedDocument['protected'] = true;
+        }
+
+        return $this->doConvertDocumentToFields($document, $convertedDocument, $meta);
     }
 
     public function getDocumentId(Document $document): string
@@ -74,6 +113,20 @@ abstract class AbstractProvider implements ProviderInterface
         $showNextLink = false;
 
         if ($this->isSubmitted($request)) {
+            $user = $this->getFrontendUser();
+
+            if (null === $user) {
+                $searchBuilder->addFilter(new EqualCondition('protected', false));
+            } else {
+                $searchBuilder->addFilter(new OrCondition(
+                    new EqualCondition('protected', false),
+                    new AndCondition(
+                        new EqualCondition('protected', true),
+                        new InCondition('groups', array_map('intval', (array) $user->groups)),
+                    ),
+                ));
+            }
+
             $searchBuilder
                 ->addFilter(new SearchCondition($this->getQuery($request)))
                 ->limit($this->generalProviderConfig->getPerPage() + 1) // Request one more for the pagination
@@ -154,9 +207,10 @@ abstract class AbstractProvider implements ProviderInterface
     }
 
     /**
+     * @return array<string, mixed> $convertedDocument
      * @return array<string, mixed>
      */
-    abstract protected function doConvertDocumentToFields(Document $document): array;
+    abstract protected function doConvertDocumentToFields(Document $document, array $convertedDocument, array $contaoSchemaOrgMeta): array;
 
     /**
      * @throws ContainerExceptionInterface
@@ -169,6 +223,26 @@ abstract class AbstractProvider implements ProviderInterface
         }
 
         return $this->container->get($name);
+    }
+
+    protected function getUser(): UserInterface|null
+    {
+        try {
+            return $this->getService('security.token_storage')->getToken()?->getUser();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    protected function getFrontendUser(): FrontendUser|null
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof FrontendUser) {
+            return null;
+        }
+
+        return $user;
     }
 
     /**
@@ -259,4 +333,9 @@ abstract class AbstractProvider implements ProviderInterface
 
         return $fields;
     }
+
+    /**
+     * @return array<string, AbstractField>
+     */
+    abstract protected function doGetFieldsForSchema(): array;
 }

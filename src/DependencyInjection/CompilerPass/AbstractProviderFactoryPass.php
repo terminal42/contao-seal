@@ -20,6 +20,7 @@ class AbstractProviderFactoryPass implements CompilerPassInterface
             'contao.image.studio' => new Reference('contao.image.studio'),
             'contao.assets.files_context' => new Reference('contao.assets.files_context'),
             'request_stack' => new Reference('request_stack'),
+            'security.token_storage' => new Reference('security.token_storage'),
         ];
 
         foreach (array_keys($taggedServices) as $id) {

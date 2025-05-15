@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Terminal42\ContaoSeal\Provider\Standard;
 
+use CmsIg\Seal\Schema\Field\AbstractField;
 use CmsIg\Seal\Schema\Field\TextField;
 use Contao\CoreBundle\Image\Studio\Figure;
 use Contao\CoreBundle\Search\Document;
@@ -13,7 +14,10 @@ use Terminal42\ContaoSeal\Provider\Util;
 
 class StandardProvider extends AbstractProvider
 {
-    public function getFieldsForSchema(): array
+    /**
+     * @return array<string, AbstractField>
+     */
+    protected function doGetFieldsForSchema(): array
     {
         return [
             'title' => new TextField('title', searchable: true),
@@ -22,13 +26,13 @@ class StandardProvider extends AbstractProvider
         ];
     }
 
-    protected function doConvertDocumentToFields(Document $document): array
+    protected function doConvertDocumentToFields(Document $document, array $convertedDocument, array $contaoSchemaOrgMeta): array
     {
-        return [
+        return array_merge($convertedDocument, [
             'title' => Util::extractTitleFromDocument($document),
             'content' => Util::extractSearchableContentFromDocument($document),
             'image' => Util::extractPrimaryImageFromSchemaOrgData($document->extractJsonLdScripts()),
-        ];
+        ]);
     }
 
     /**

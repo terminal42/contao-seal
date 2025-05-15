@@ -79,6 +79,17 @@ class Util
         }
     }
 
+    public static function extractContaoSchemaMeta(Document $document): array
+    {
+        $jsonLds = $document->extractJsonLdScripts('https://schema.contao.org/', 'Page');
+
+        if (!$jsonLds) {
+            return [];
+        }
+
+        return array_merge(...$jsonLds);
+    }
+
     /**
      * @param array<string>|string $listWizard
      * ^ */
