@@ -33,7 +33,7 @@
 
                             {# Result headline #}
                             {% block result_headline %}
-                                <h3><a href="{{ result.url }}" title="{{ result.title }}">{{ result.title }}</a></h3>
+                                <h3><a href="{{ result.uri }}" title="{{ result.title }}">{{ result.title }}</a></h3>
                             {% endblock %}
 
                             {# Result context #}
@@ -43,9 +43,9 @@
                                 {% endif %}
                             {% endblock %}
 
-                            {# Result url #}
-                            {% block result_url %}
-                                <p class="url">{{ result.url }}</p>
+                            {# Result uri #}
+                            {% block result_uri %}
+                                <p class="uri">{{ result.uri }}</p>
                             {% endblock %}
                         </div>
                     {% endfor %}

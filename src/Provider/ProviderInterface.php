@@ -22,9 +22,11 @@ interface ProviderInterface
     public function getFieldsForSchema(): array;
 
     /**
-     * @return ?array<string, mixed> Return null if this document should be ignored
+     * @param ?array<string, mixed> $existingIndexedDocument Existing document with the matching document ID
+     *
+     * @return ?array<string, mixed> Return null if this document should be ignored (or if existing, deleted)
      */
-    public function convertDocumentToFields(Document $document): array|null;
+    public function convertDocumentToFields(Document $document, array|null $existingIndexedDocument): array|null;
 
     public function getTemplateName(Request $request): string;
 

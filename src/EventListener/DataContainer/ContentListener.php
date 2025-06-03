@@ -9,7 +9,7 @@ use Terminal42\ContaoSeal\FrontendSearch;
 
 class ContentListener
 {
-    public function __construct(private FrontendSearch $frontendSearch)
+    public function __construct(private readonly FrontendSearch $frontendSearch)
     {
     }
 

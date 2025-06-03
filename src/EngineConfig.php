@@ -31,12 +31,12 @@ class EngineConfig
      * @param \Closure(): ProviderInterface $providerClosure
      */
     private function __construct(
-        private string $id,
-        private string $name,
-        private string $adapterName,
-        private AdapterInterface $adapter,
-        private string $providerFactoryName,
-        private \Closure $providerClosure,
+        private readonly string $id,
+        private readonly string $name,
+        private readonly string $adapterName,
+        private readonly AdapterInterface $adapter,
+        private readonly string $providerFactoryName,
+        private readonly \Closure $providerClosure,
     ) {
     }
 
@@ -75,11 +75,13 @@ class EngineConfig
     }
 
     /**
-     * @return ?array<string, mixed>
+     * @param ?array<string, mixed> $existingIndexedDocument Existing document with the matching document ID
+     *
+     * * @return ?array<string, mixed> Return null if this document should be ignored (or if existing, deleted)
      */
-    public function convertDocumentToFields(Document $document): array|null
+    public function convertDocumentToFields(Document $document, array|null $existingIndexedDocument): array|null
     {
-        return $this->getProvider()->convertDocumentToFields($document);
+        return $this->getProvider()->convertDocumentToFields($document, $existingIndexedDocument);
     }
 
     /**

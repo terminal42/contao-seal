@@ -16,9 +16,9 @@ use Terminal42\ContaoSeal\FrontendSearch;
 class SearchIndexConfigListener
 {
     public function __construct(
-        private FrontendSearch $frontendSearch,
-        private TranslatorInterface $translator,
-        private FinderFactory $finderFactory,
+        private readonly FrontendSearch $frontendSearch,
+        private readonly TranslatorInterface $translator,
+        private readonly FinderFactory $finderFactory,
         private readonly Security $security,
         private readonly ImageSizes $imageSizes,
     ) {

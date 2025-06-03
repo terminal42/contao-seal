@@ -8,7 +8,6 @@ use CmsIg\Seal\Schema\Field\AbstractField;
 use CmsIg\Seal\Schema\Field\TextField;
 use Contao\CoreBundle\Image\Studio\Figure;
 use Contao\CoreBundle\Search\Document;
-use Terminal42\ContaoSeal\EngineConfig;
 use Terminal42\ContaoSeal\Provider\AbstractProvider;
 use Terminal42\ContaoSeal\Provider\Util;
 
@@ -20,6 +19,7 @@ class StandardProvider extends AbstractProvider
     protected function doGetFieldsForSchema(): array
     {
         return [
+            'uri' => new TextField('title', searchable: false),
             'title' => new TextField('title', searchable: true),
             'content' => new TextField('content', searchable: true),
             'image' => new TextField('image', searchable: false),
@@ -29,8 +29,9 @@ class StandardProvider extends AbstractProvider
     protected function doConvertDocumentToFields(Document $document, array $convertedDocument, array $contaoSchemaOrgMeta): array
     {
         return array_merge($convertedDocument, [
+            'uri' => (string) $document->getUri(),
             'title' => Util::extractTitleFromDocument($document),
-            'content' => Util::extractSearchableContentFromDocument($document),
+            'content' => $this->extractSearchableContentFromDocument($document),
             'image' => Util::extractPrimaryImageFromSchemaOrgData($document->extractJsonLdScripts()),
         ]);
     }
@@ -39,8 +40,8 @@ class StandardProvider extends AbstractProvider
      * @param array<array<string, mixed>> $results
      *
      * @return array<int, array{
+     *     uri: string,
      *     image: Figure|null,
-     *     url: string,
      *     title: string,
      *     context: string
      * }>
@@ -50,10 +51,9 @@ class StandardProvider extends AbstractProvider
         $formatted = [];
 
         foreach ($results as $document) {
-            $url = $document[EngineConfig::DOCUMENT_ID_ATTRIBUTE_NAME];
             $formatted[] = [
-                'image' => $this->createFigureFromDocument($document, $url),
-                'url' => $url,
+                'image' => $this->createFigureFromDocument($document, $document['uri']),
+                'uri' => $document['uri'],
                 'title' => $document['title'],
                 'context' => $this->documentToContext($document),
             ];

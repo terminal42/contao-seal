@@ -67,7 +67,7 @@ class Util
         // Strip HTML tags and cleanup
         $html = strip_tags($html);
 
-        return trim(preg_replace('/ +/', ' ', $html));
+        return trim((string) preg_replace('/ +/', ' ', $html));
     }
 
     public static function extractTitleFromDocument(Document $document): string

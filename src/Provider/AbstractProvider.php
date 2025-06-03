@@ -6,10 +6,9 @@ namespace Terminal42\ContaoSeal\Provider;
 
 use CmsIg\Seal\Schema\Field\AbstractField;
 use CmsIg\Seal\Schema\Field\BooleanField;
-use CmsIg\Seal\Schema\Field\IntegerField;
+use CmsIg\Seal\Schema\Field\TextField;
 use CmsIg\Seal\Search\Condition\AndCondition;
 use CmsIg\Seal\Search\Condition\EqualCondition;
-use CmsIg\Seal\Search\Condition\InCondition;
 use CmsIg\Seal\Search\Condition\OrCondition;
 use CmsIg\Seal\Search\Condition\SearchCondition;
 use CmsIg\Seal\Search\SearchBuilder;
@@ -20,6 +19,7 @@ use Contao\CoreBundle\Image\Studio\Studio;
 use Contao\CoreBundle\Search\Document;
 use Contao\FrontendUser;
 use Contao\Image\PictureConfiguration;
+use Contao\StringUtil;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -32,11 +32,16 @@ abstract class AbstractProvider implements ProviderInterface
     protected ContainerInterface|null $container = null;
 
     /**
+     * @var array<int, string>
+     */
+    private array $searchableContentsPerDocument = [];
+
+    /**
      * @param array<mixed> $providerConfig
      */
     public function __construct(
-        private array $providerConfig,
-        private GeneralProviderConfig $generalProviderConfig,
+        private readonly array $providerConfig,
+        private readonly GeneralProviderConfig $generalProviderConfig,
     ) {
     }
 
@@ -59,8 +64,9 @@ abstract class AbstractProvider implements ProviderInterface
     {
         return array_merge(
             [
-                'protected' => new BooleanField('protected', filterable: true),
-                'groups' => new IntegerField('groups', multiple: true, filterable: true),
+                'uri' => new TextField('uri', filterable: true, distinct: true), // Use URI as distinct to not show the same URI times
+                'public' => new BooleanField('public', filterable: true),
+                'groupHashes' => new TextField('groupHashes', multiple: true, filterable: true), // Access keys contain the member group combinations for a doc if not public
             ],
             $this->doGetFieldsForSchema(),
         );
@@ -71,7 +77,12 @@ abstract class AbstractProvider implements ProviderInterface
         return $this->generalProviderConfig->getTemplateName();
     }
 
-    public function convertDocumentToFields(Document $document): array|null
+    /**
+     * @param ?array<string, mixed> $existingIndexedDocument Existing document with the matching document ID
+     *
+     * * @return ?array<string, mixed> Return null if this document should be ignored (or if existing, deleted)
+     */
+    public function convertDocumentToFields(Document $document, array|null $existingIndexedDocument): array|null
     {
         if (!Util::documentMatchesUrlRegex($document, $this->generalProviderConfig->getUrlRegex())) {
             return null;
@@ -93,11 +104,24 @@ abstract class AbstractProvider implements ProviderInterface
             return null;
         }
 
-        $convertedDocument = ['groups' => [], 'protected' => false];
+        $convertedDocument = ['uri' => (string) $document->getUri()];
 
-        if (isset($meta['protected'], $meta['groups']) && true === $meta['protected'] && \is_array($meta['groups'])) {
-            $convertedDocument['groups'] = $meta['groups'];
-            $convertedDocument['protected'] = true;
+        $groupHash = $this->getMemberGroupHash();
+
+        // Public document
+        if (null === $groupHash) {
+            $convertedDocument['public'] = true;
+            $convertedDocument['groupHashes'] = []; // Reset, might have been marked protected before
+        } else {
+            $convertedDocument['public'] = false;
+            $convertedDocument['groupHashes'] = [$groupHash];
+
+            // If this document has been indexed before (same content on the same URL), we have to merge the access keys.
+            // It might be that the content is exactly the same, even though a member is logged in. That means, we optimize
+            // to not generate hundreds of duplicate search entries just because of the different permissions.
+            if (null !== $existingIndexedDocument) {
+                $convertedDocument['groupHashes'] = array_unique(array_merge($convertedDocument['groupHashes'], $existingIndexedDocument['groupHashes'] ?? []));
+            }
         }
 
         return $this->doConvertDocumentToFields($document, $convertedDocument, $meta);
@@ -105,7 +129,8 @@ abstract class AbstractProvider implements ProviderInterface
 
     public function getDocumentId(Document $document): string
     {
-        return (string) $document->getUri();
+        // One search entry per URI and document content hash
+        return hash('xxh3', $document->getUri().'|'.$this->getDocumentContentHash($document));
     }
 
     public function getTemplateData(SearchBuilder $searchBuilder, Request $request): array
@@ -113,22 +138,23 @@ abstract class AbstractProvider implements ProviderInterface
         $showNextLink = false;
 
         if ($this->isSubmitted($request)) {
-            $user = $this->getFrontendUser();
+            $groupHash = $this->getMemberGroupHash();
 
-            if (null === $user) {
-                $searchBuilder->addFilter(new EqualCondition('protected', false));
+            if (null === $groupHash) {
+                $searchBuilder->addFilter(new EqualCondition('public', true));
             } else {
                 $searchBuilder->addFilter(new OrCondition(
-                    new EqualCondition('protected', false),
+                    new EqualCondition('public', true),
                     new AndCondition(
-                        new EqualCondition('protected', true),
-                        new InCondition('groups', array_map('intval', (array) $user->groups)),
+                        new EqualCondition('public', false),
+                        new EqualCondition('groupHashes', $groupHash),
                     ),
                 ));
             }
 
             $searchBuilder
                 ->addFilter(new SearchCondition($this->getQuery($request)))
+                ->distinct('uri') // Only one result per URI, could match multiple due to public and matching group hashes
                 ->limit($this->generalProviderConfig->getPerPage() + 1) // Request one more for the pagination
                 ->offset($this->getOffset($request))
                 ->highlight(
@@ -152,6 +178,35 @@ abstract class AbstractProvider implements ProviderInterface
             'results' => $this->formatResults($results),
             'pagination' => $this->getPagination($request, $showNextLink),
         ]);
+    }
+
+    protected function getDocumentContentHash(Document $document): string
+    {
+        return hash('xxh3', $this->extractSearchableContentFromDocument($document));
+    }
+
+    protected function extractSearchableContentFromDocument(Document $document): string
+    {
+        // TODO: This method can be dropped once https://github.com/contao/contao/pull/8370 is available in the minimum required
+        // version of Contao so we don't have a performance issue here anymore.
+        $documentId = spl_object_id($document);
+
+        return $this->searchableContentsPerDocument[$documentId] ?? $this->searchableContentsPerDocument[$documentId] = Util::extractSearchableContentFromDocument($document);
+    }
+
+    protected function getMemberGroupHash(): string|null
+    {
+        $user = $this->getFrontendUser();
+
+        if (null === $user) {
+            return null;
+        }
+
+        $groups = array_map('intval', StringUtil::deserialize($user->groups, true));
+
+        sort($groups);
+
+        return hash('xxh3', implode(',', $groups));
     }
 
     /**
@@ -277,7 +332,7 @@ abstract class AbstractProvider implements ProviderInterface
      */
     protected function createFigureBuilderFromUrl(array $schemaOrgImageData, PictureConfiguration|array|int|string|null $imageSize = null): FigureBuilder|null
     {
-        $imageSize = $imageSize ?? $this->generalProviderConfig->getImageSize();
+        $imageSize ??= $this->generalProviderConfig->getImageSize();
 
         /** @var Studio $studio */
         $studio = $this->getService('contao.image.studio');

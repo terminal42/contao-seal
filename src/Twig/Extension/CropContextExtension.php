@@ -13,7 +13,7 @@ class CropContextExtension extends AbstractExtension
     public function getFilters(): array
     {
         return [
-            new TwigFilter('crop_context', [$this, 'cropContext']),
+            new TwigFilter('crop_context', $this->cropContext(...)),
         ];
     }
 

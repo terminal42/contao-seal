@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Terminal42\ContaoSeal;
 
 use CmsIg\Seal\Adapter\AdapterInterface;
+use CmsIg\Seal\Exception\DocumentNotFoundException;
 use Contao\CoreBundle\Search\Document;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -63,16 +64,27 @@ class FrontendSearch implements ResetInterface
     public function index(Document $document): void
     {
         foreach ($this->getEngineConfigs() as $config) {
-            $converted = $config->convertDocumentToFields($document);
+            $documentId = $config->getDocumentId($document);
+
+            try {
+                $existingIndexedDocument = $config->getEngine()->getDocument($config->getIndexName(), $documentId);
+            } catch (DocumentNotFoundException) {
+                $existingIndexedDocument = null;
+            }
+
+            $converted = $config->convertDocumentToFields($document, $existingIndexedDocument);
 
             if (null === $converted) {
+                // Delete the document in case it was existing but should not
+                if (null !== $existingIndexedDocument) {
+                    $config->getEngine()->deleteDocument($config->getIndexName(), $documentId);
+                }
+
                 continue;
             }
 
             // Ensure the converted document always has the correct primary key
-            $converted = array_merge($converted, [
-                EngineConfig::DOCUMENT_ID_ATTRIBUTE_NAME => $config->getDocumentId($document),
-            ]);
+            $converted = array_merge($converted, [EngineConfig::DOCUMENT_ID_ATTRIBUTE_NAME => $documentId]);
 
             $config->getEngine()->saveDocument($config->getIndexName(), $converted);
         }
