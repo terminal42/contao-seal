@@ -191,7 +191,8 @@ abstract class AbstractProvider implements ProviderInterface
         // version of Contao so we don't have a performance issue here anymore.
         $documentId = spl_object_id($document);
 
-        return $this->searchableContentsPerDocument[$documentId] ?? $this->searchableContentsPerDocument[$documentId] = Util::extractSearchableContentFromDocument($document);
+        // Pass true as second argument to Util::extractSearchableContentFromDocument() because we support indexing protected content elements
+        return $this->searchableContentsPerDocument[$documentId] ?? $this->searchableContentsPerDocument[$documentId] = Util::extractSearchableContentFromDocument($document, true);
     }
 
     protected function getMemberGroupHash(): string|null

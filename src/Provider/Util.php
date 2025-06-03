@@ -11,6 +11,12 @@ use Symfony\Component\HttpFoundation\Request;
 
 class Util
 {
+    private const INDEXER_STOP = '<!-- indexer::stop -->';
+
+    private const INDEXER_PROTECTED = '<!-- indexer::protected -->';
+
+    private const INDEXER_CONTINUE = '<!-- indexer::continue -->';
+
     /**
      * @param array<mixed> $schemaData
      *
@@ -27,7 +33,7 @@ class Util
         return null;
     }
 
-    public static function extractSearchableContentFromDocument(Document $document): string
+    public static function extractSearchableContentFromDocument(Document $document, bool $allowProtected = false): string
     {
         // We're only interested in <body>
         $body = $document->getContentCrawler()->filterXPath('//body');
@@ -43,14 +49,25 @@ class Util
         // Extract the HTML and filter it for indexer start and stop comments
         $html = $body->html();
 
-        // Strip non-indexable areas
-        while (($start = strpos($html, '<!-- indexer::stop -->')) !== false) {
-            if (($end = strpos($html, '<!-- indexer::continue -->', $start)) !== false) {
+        while (($start = strpos($html, self::INDEXER_STOP)) !== false) {
+            $afterStop = substr($html, $start + \strlen(self::INDEXER_STOP), \strlen(self::INDEXER_PROTECTED));
+
+            // Skip removal if protected tag is immediately after stop tag and allowProtected is true
+            if ($allowProtected && self::INDEXER_PROTECTED === $afterStop) {
+                // Skip this and continue after this occurrence
+                $start = strpos($html, self::INDEXER_STOP, $start + \strlen(self::INDEXER_STOP));
+                if (false === $start) {
+                    break;
+                }
+                continue;
+            }
+
+            if (($end = strpos($html, self::INDEXER_CONTINUE, $start)) !== false) {
                 $current = $start;
 
                 // Handle nested tags
-                while (($nested = strpos($html, '<!-- indexer::stop -->', $current + 22)) !== false && $nested < $end) {
-                    if (($newEnd = strpos($html, '<!-- indexer::continue -->', $end + 26)) !== false) {
+                while (($nested = strpos($html, self::INDEXER_STOP, $current + \strlen(self::INDEXER_STOP))) !== false && $nested < $end) {
+                    if (($newEnd = strpos($html, self::INDEXER_CONTINUE, $end + \strlen(self::INDEXER_CONTINUE))) !== false) {
                         $end = $newEnd;
                         $current = $nested;
                     } else {
@@ -58,7 +75,7 @@ class Util
                     }
                 }
 
-                $html = substr($html, 0, $start).substr($html, $end + 26);
+                $html = substr($html, 0, $start).substr($html, $end + \strlen(self::INDEXER_CONTINUE));
             } else {
                 break;
             }
@@ -67,7 +84,7 @@ class Util
         // Strip HTML tags and cleanup
         $html = strip_tags($html);
 
-        return trim((string) preg_replace('/ +/', ' ', $html));
+        return trim((string) preg_replace(['/^[ \t]*$/m', '/\s+/'], ['', ' '], $html));
     }
 
     public static function extractTitleFromDocument(Document $document): string
