@@ -19,7 +19,6 @@ class StandardProvider extends AbstractProvider
     protected function doGetFieldsForSchema(): array
     {
         return [
-            'uri' => new TextField('title', searchable: false),
             'title' => new TextField('title', searchable: true),
             'content' => new TextField('content', searchable: true),
             'image' => new TextField('image', searchable: false),
@@ -29,7 +28,6 @@ class StandardProvider extends AbstractProvider
     protected function doConvertDocumentToFields(Document $document, array $convertedDocument, array $contaoSchemaOrgMeta): array
     {
         return array_merge($convertedDocument, [
-            'uri' => (string) $document->getUri(),
             'title' => Util::extractTitleFromDocument($document),
             'content' => $this->extractSearchableContentFromDocument($document),
             'image' => Util::extractPrimaryImageFromSchemaOrgData($document->extractJsonLdScripts()),
@@ -52,8 +50,8 @@ class StandardProvider extends AbstractProvider
 
         foreach ($results as $document) {
             $formatted[] = [
-                'image' => $this->createFigureFromDocument($document, $document['uri']),
-                'uri' => $document['uri'],
+                'uri' => $document[self::URI_DOCUMENT_PROPERTY],
+                'image' => $this->createFigureFromDocument($document, $document[self::URI_DOCUMENT_PROPERTY]),
                 'title' => $document['title'],
                 'context' => $this->documentToContext($document),
             ];

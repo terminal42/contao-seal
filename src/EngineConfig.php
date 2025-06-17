@@ -133,7 +133,7 @@ class EngineConfig
         return $this->providerFactoryName;
     }
 
-    private function getProvider(): ProviderInterface
+    public function getProvider(): ProviderInterface
     {
         if (null === $this->provider) {
             $this->provider = ($this->providerClosure)();

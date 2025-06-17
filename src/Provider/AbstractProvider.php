@@ -25,10 +25,15 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-abstract class AbstractProvider implements ProviderInterface
+abstract class AbstractProvider implements ProviderInterface, ResponseModifyingProviderInterface
 {
+    protected const URI_DOCUMENT_PROPERTY = 'uri';
+
+    private const MEMBER_GROUP_HEADER = 'contao-seal-member-group-hash';
+
     protected ContainerInterface|null $container = null;
 
     /**
@@ -60,13 +65,25 @@ abstract class AbstractProvider implements ProviderInterface
         return $this;
     }
 
+    public function modifyResponse(Request $request, Response $response): void
+    {
+        // Add the member group hash to the response so it's part of the response if there's a logged-in user.
+        // This will allow to extract the information when indexing again as it is otherwise lost when the indexing
+        // process is happening via Symfony Messenger.
+        $groupHash = $this->getMemberGroupHash();
+
+        if (null !== $groupHash) {
+            $response->headers->set(self::MEMBER_GROUP_HEADER, $groupHash);
+        }
+    }
+
     public function getFieldsForSchema(): array
     {
         return array_merge(
             [
-                'uri' => new TextField('uri', filterable: true, distinct: true), // Use URI as distinct to not show the same URI times
-                'public' => new BooleanField('public', filterable: true),
-                'groupHashes' => new TextField('groupHashes', multiple: true, filterable: true), // Access keys contain the member group combinations for a doc if not public
+                self::URI_DOCUMENT_PROPERTY => new TextField(self::URI_DOCUMENT_PROPERTY, searchable: false, filterable: true, distinct: true), // Use URI as distinct to not show the same URI times
+                'public' => new BooleanField('public', searchable: false, filterable: true),
+                'groupHashes' => new TextField('groupHashes', searchable: false, multiple: true, filterable: true), // Access keys contain the member group combinations for a doc if not public
             ],
             $this->doGetFieldsForSchema(),
         );
@@ -104,9 +121,11 @@ abstract class AbstractProvider implements ProviderInterface
             return null;
         }
 
-        $convertedDocument = ['uri' => (string) $document->getUri()];
+        $convertedDocument = [self::URI_DOCUMENT_PROPERTY => (string) $document->getUri()];
 
-        $groupHash = $this->getMemberGroupHash();
+        // Read the member group hash from the document and not from the currently logged-in user. If indexing is
+        // happening in the background via Symfony Messenger, there's never a logged-in user.
+        $groupHash = $document->getHeaders()[self::MEMBER_GROUP_HEADER][0] ?? null;
 
         // Public document
         if (null === $groupHash) {
@@ -154,7 +173,7 @@ abstract class AbstractProvider implements ProviderInterface
 
             $searchBuilder
                 ->addFilter(new SearchCondition($this->getQuery($request)))
-                ->distinct('uri') // Only one result per URI, could match multiple due to public and matching group hashes
+                ->distinct(self::URI_DOCUMENT_PROPERTY) // Only one result per URI, could match multiple due to public and matching group hashes
                 ->limit($this->generalProviderConfig->getPerPage() + 1) // Request one more for the pagination
                 ->offset($this->getOffset($request))
                 ->highlight(

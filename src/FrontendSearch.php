@@ -10,10 +10,12 @@ use Contao\CoreBundle\Search\Document;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Service\ResetInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Terminal42\ContaoSeal\Provider\ProviderFactoryInterface;
 use Terminal42\ContaoSeal\Provider\ProviderInterface;
+use Terminal42\ContaoSeal\Provider\ResponseModifyingProviderInterface;
 use Terminal42\ContaoSeal\Seal\EventDispatchingAdapter;
 
 class FrontendSearch implements ResetInterface
@@ -192,5 +194,16 @@ class FrontendSearch implements ResetInterface
         }
 
         return $config;
+    }
+
+    public function modifyResponse(Request $request, Response $response): void
+    {
+        foreach ($this->getEngineConfigs() as $config) {
+            $provider = $config->getProvider();
+
+            if ($provider instanceof ResponseModifyingProviderInterface) {
+                $provider->modifyResponse($request, $response);
+            }
+        }
     }
 }
