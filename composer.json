@@ -1,6 +1,6 @@
 {
     "name": "terminal42/contao-seal",
-    "description": "This is a POC extension add SEAL integration for the frontend into Contao Open Source CMS",
+    "description": "This extensions provides SEAL integration for the frontend into Contao Open Source CMS",
     "keywords": ["contao", "search", "frontend"],
     "type": "contao-bundle",
     "license": "MIT",
