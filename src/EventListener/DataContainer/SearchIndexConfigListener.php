@@ -47,9 +47,8 @@ class SearchIndexConfigListener
     {
         $options = [];
 
-        foreach ($this->frontendSearch->getEngineConfigs() as $config) {
-            $name = $config->getAdapterName();
-            $options[$name] = $this->translator->trans('tl_search_index_config.adapters.'.$name, [], 'contao_tl_search_index_config');
+        foreach (array_keys($this->frontendSearch->getAvailableAdapters()) as $adapterName) {
+            $options[$adapterName] = $this->translator->trans('tl_search_index_config.adapters.'.$adapterName, [], 'contao_tl_search_index_config');
         }
 
         return $options;
@@ -63,9 +62,8 @@ class SearchIndexConfigListener
     {
         $options = [];
 
-        foreach ($this->frontendSearch->getEngineConfigs() as $config) {
-            $name = $config->getProviderFactoryName();
-            $options[$name] = $this->translator->trans('tl_search_index_config.provider_factory.'.$name, [], 'contao_tl_search_index_config');
+        foreach (array_keys($this->frontendSearch->getAvailableProviderFactories()) as $factoryName) {
+            $options[$factoryName] = $this->translator->trans('tl_search_index_config.provider_factory.'.$factoryName, [], 'contao_tl_search_index_config');
         }
 
         return $options;

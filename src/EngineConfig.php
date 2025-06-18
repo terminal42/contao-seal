@@ -33,9 +33,7 @@ class EngineConfig
     private function __construct(
         private readonly string $id,
         private readonly string $name,
-        private readonly string $adapterName,
         private readonly AdapterInterface $adapter,
-        private readonly string $providerFactoryName,
         private readonly \Closure $providerClosure,
     ) {
     }
@@ -87,17 +85,17 @@ class EngineConfig
     /**
      * @param \Closure(): ProviderInterface $providerClosure
      */
-    public static function createFromDatabase(string $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, \Closure $providerClosure): self
+    public static function createFromDatabase(string $id, string $name, AdapterInterface $adapter, \Closure $providerClosure): self
     {
-        return new self($id, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
+        return new self($id, $name, $adapter, $providerClosure);
     }
 
     /**
      * @param \Closure(): ProviderInterface $providerClosure
      */
-    public static function createFromConfig(string $id, string $name, string $adapterName, AdapterInterface $adapter, string $providerFactoryName, \Closure $providerClosure): self
+    public static function createFromConfig(string $id, string $name, AdapterInterface $adapter, \Closure $providerClosure): self
     {
-        return new self($id, $name, $adapterName, $adapter, $providerFactoryName, $providerClosure);
+        return new self($id, $name, $adapter, $providerClosure);
     }
 
     /**
@@ -121,16 +119,6 @@ class EngineConfig
     public function getDocumentId(Document $document): string
     {
         return $this->getProvider()->getDocumentId($document);
-    }
-
-    public function getAdapterName(): string
-    {
-        return $this->adapterName;
-    }
-
-    public function getProviderFactoryName(): string
-    {
-        return $this->providerFactoryName;
     }
 
     public function getProvider(): ProviderInterface

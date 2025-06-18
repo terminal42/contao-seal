@@ -151,15 +151,18 @@ class FrontendSearch implements ResetInterface
                 $config = EngineConfig::createFromConfig(
                     $configId,
                     $this->translator->trans('tl_search_index_config.index.'.$configName, [], 'contao_tl_search_index_config'),
-                    $adapterName,
                     $getAdapter($adapterName, $configName),
-                    $providerFactoryName,
                     $createProviderClosure($providerFactoryName, $config['providerConfig']),
                 );
                 $this->indexConfigs[$config->getId()] = $config;
             }
 
             foreach ($this->connection->fetchAllAssociative('SELECT * FROM tl_search_index_config') as $row) {
+                // Config not ready yet
+                if (0 === $row['tstamp']) {
+                    continue;
+                }
+
                 $configId = EngineConfig::DATABASE_CONFIG_PREFIX.((int) $row['id']);
                 $name = $row['name'];
                 $adapterName = $row['adapter'];
@@ -170,9 +173,7 @@ class FrontendSearch implements ResetInterface
                 $config = EngineConfig::createFromDatabase(
                     $configId,
                     $name,
-                    $adapterName,
                     $getAdapter($adapterName, $configId),
-                    $providerFactoryName,
                     $createProviderClosure($providerFactoryName, $row),
                 );
                 $this->indexConfigs[$config->getId()] = $config;
@@ -205,5 +206,21 @@ class FrontendSearch implements ResetInterface
                 $provider->modifyResponse($request, $response);
             }
         }
+    }
+
+    /**
+     * @return array<string, ProviderFactoryInterface>
+     */
+    public function getAvailableProviderFactories(): array
+    {
+        return $this->providerFactories;
+    }
+
+    /**
+     * @return array<string, AdapterInterface>
+     */
+    public function getAvailableAdapters(): array
+    {
+        return $this->adapters;
     }
 }

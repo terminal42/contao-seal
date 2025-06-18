@@ -4,6 +4,12 @@
             <trans-unit id="MSC.page">
                 <source>Page %d</source>
             </trans-unit>
+            <trans-unit id="CTE.seal_search.0">
+                <source>Search</source>
+            </trans-unit>
+            <trans-unit id="CTE.seal_search.1">
+                <source>Adds a search content element.</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

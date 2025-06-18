@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Terminal42\ContaoSeal\FrontendSearch;
 
-#[AsContentElement('search')]
+#[AsContentElement('seal_search')]
 class SearchController extends AbstractContentElementController
 {
     public function __construct(private readonly FrontendSearch $frontendSearch)
