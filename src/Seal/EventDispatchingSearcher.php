@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Terminal42\ContaoSeal\Seal;
 
 use CmsIg\Seal\Adapter\SearcherInterface;
+use CmsIg\Seal\Schema\Index;
 use CmsIg\Seal\Search\Result;
 use CmsIg\Seal\Search\Search;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -65,5 +66,10 @@ class EventDispatchingSearcher implements SearcherInterface
             $originalSearch->highlightPreTag,
             $originalSearch->highlightPostTag,
         );
+    }
+
+    public function count(Index $index): int
+    {
+        return $this->searcher->count($index);
     }
 }
