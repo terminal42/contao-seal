@@ -85,7 +85,7 @@ class FrontendSearch implements ResetInterface
             try {
                 $existingIndexedDocument = $config->getEngine()->getDocument($config->getIndexName(), $documentId);
             } catch (DocumentNotFoundException) {
-                continue;
+                $existingIndexedDocument = null;
             }
 
             try {
