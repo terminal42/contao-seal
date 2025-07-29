@@ -66,13 +66,13 @@
         <source>URL filter</source>
       </trans-unit>
       <trans-unit id="tl_search_index_config.urls.1">
-        <source>If you are only interested in certain URLs for this search index, configure the filters using regular expressions here. (e.g. "domain\.com").</source>
+        <source>If you are only interested in certain URLs for this search index, configure the filters using regular expressions here. (e.g. "^https://www\.domain\.com").</source>
       </trans-unit>
       <trans-unit id="tl_search_index_config.canonicals.0">
         <source>Canonical URL filter</source>
       </trans-unit>
       <trans-unit id="tl_search_index_config.canonicals.1">
-        <source>If you are only interested in certain Canonical URLs for this search index, configure the filters using regular expressions here. (e.g. "domain\.com").</source>
+        <source>If you are only interested in certain Canonical URLs for this search index, configure the filters using regular expressions here. (e.g. "^https://www\.domain\.com").</source>
       </trans-unit>
       <trans-unit id="tl_search_index_config.imgSize.0">
         <source>Image size</source>
