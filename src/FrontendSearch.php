@@ -7,12 +7,14 @@ namespace Terminal42\ContaoSeal;
 use CmsIg\Seal\Adapter\AdapterInterface;
 use CmsIg\Seal\Exception\DocumentNotFoundException;
 use Contao\CoreBundle\Search\Document;
+use Contao\CoreBundle\Search\Indexer\IndexerException;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Service\ResetInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Terminal42\ContaoSeal\Provider\Exception\DocumentIgnoredException;
 use Terminal42\ContaoSeal\Provider\ProviderFactoryInterface;
 use Terminal42\ContaoSeal\Provider\ProviderInterface;
 use Terminal42\ContaoSeal\Provider\ResponseModifyingProviderInterface;
@@ -65,30 +67,43 @@ class FrontendSearch implements ResetInterface
 
     public function index(Document $document): void
     {
+        $getMergedExceptionMessage = static function (array $exceptions): string {
+            $messages = [];
+
+            foreach ($exceptions as $exception) {
+                $messages[] = $exception->getMessage();
+            }
+
+            return implode(' | ', $messages);
+        };
+
+        $indexerExceptions = [];
+
         foreach ($this->getEngineConfigs() as $config) {
             $documentId = $config->getDocumentId($document);
 
             try {
                 $existingIndexedDocument = $config->getEngine()->getDocument($config->getIndexName(), $documentId);
             } catch (DocumentNotFoundException) {
-                $existingIndexedDocument = null;
-            }
-
-            $converted = $config->convertDocumentToFields($document, $existingIndexedDocument);
-
-            if (null === $converted) {
-                // Delete the document in case it was existing but should not
-                if (null !== $existingIndexedDocument) {
-                    $config->getEngine()->deleteDocument($config->getIndexName(), $documentId);
-                }
-
                 continue;
             }
 
-            // Ensure the converted document always has the correct primary key
-            $converted = array_merge($converted, [EngineConfig::DOCUMENT_ID_ATTRIBUTE_NAME => $documentId]);
+            try {
+                $converted = $config->convertDocumentToFields($document, $existingIndexedDocument);
 
-            $config->getEngine()->saveDocument($config->getIndexName(), $converted);
+                // Ensure the converted document always has the correct primary key
+                $converted = array_merge($converted, [EngineConfig::DOCUMENT_ID_ATTRIBUTE_NAME => $documentId]);
+
+                $config->getEngine()->saveDocument($config->getIndexName(), $converted);
+            } catch (DocumentIgnoredException $e) {
+                // Delete the document in case it was existing but should not
+                $config->getEngine()->deleteDocument($config->getIndexName(), $documentId);
+                $indexerExceptions[] = $e;
+            }
+        }
+
+        if ([] !== $indexerExceptions) {
+            throw IndexerException::createAsWarning($getMergedExceptionMessage($indexerExceptions));
         }
     }
 

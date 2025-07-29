@@ -14,7 +14,7 @@ use Terminal42\ContaoSeal\Event\ModifySearchResultEvent;
 class EventDispatchingSearcher implements SearcherInterface
 {
     public function __construct(
-        readonly private SearcherInterface $searcher,
+        private readonly SearcherInterface $searcher,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly string $configId,
     ) {
@@ -54,6 +54,11 @@ class EventDispatchingSearcher implements SearcherInterface
         return new Result($arrayToGenerator($finalResults), \count($finalResults));
     }
 
+    public function count(Index $index): int
+    {
+        return $this->searcher->count($index);
+    }
+
     private function createNewSearch(Search $originalSearch, int $offset, int $limit): Search
     {
         return new Search(
@@ -66,10 +71,5 @@ class EventDispatchingSearcher implements SearcherInterface
             $originalSearch->highlightPreTag,
             $originalSearch->highlightPostTag,
         );
-    }
-
-    public function count(Index $index): int
-    {
-        return $this->searcher->count($index);
     }
 }

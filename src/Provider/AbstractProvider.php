@@ -27,6 +27,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Terminal42\ContaoSeal\Provider\Exception\DocumentIgnoredException;
 
 abstract class AbstractProvider implements ProviderInterface, ResponseModifyingProviderInterface
 {
@@ -97,28 +98,34 @@ abstract class AbstractProvider implements ProviderInterface, ResponseModifyingP
     /**
      * @param ?array<string, mixed> $existingIndexedDocument Existing document with the matching document ID
      *
-     * * @return ?array<string, mixed> Return null if this document should be ignored (or if existing, deleted)
+     * @return array<string, mixed>
+     *
+     * @throws DocumentIgnoredException In case the document should be ignored
      */
-    public function convertDocumentToFields(Document $document, array|null $existingIndexedDocument): array|null
+    public function convertDocumentToFields(Document $document, array|null $existingIndexedDocument): array
     {
         if (!Util::documentMatchesUrlRegex($document, $this->generalProviderConfig->getUrlRegex())) {
-            return null;
+            throw DocumentIgnoredException::because('No URL regex matched.');
         }
 
         if (!Util::documentMatchesCanonicalRegex($document, $this->generalProviderConfig->getCanonicalRegex())) {
-            return null;
+            throw DocumentIgnoredException::because('No Canonical URL regex matched.');
         }
 
-        $meta = Util::extractContaoSchemaMeta($document);
+        $contaoSchemaMeta = Util::extractContaoSchemaMeta($document);
+
+        if ($this->skipDocumentsWithoutContaoSchemaData() && [] === $contaoSchemaMeta) {
+            throw DocumentIgnoredException::because('No Contao JSON-LD schema was present on the document.');
+        }
 
         // If search was disabled in the page settings, we do not index
-        if (isset($meta['noSearch']) && true === $meta['noSearch']) {
-            return null;
+        if (isset($contaoSchemaMeta['noSearch']) && true === $contaoSchemaMeta['noSearch']) {
+            throw DocumentIgnoredException::because('The Contao JSON-LD schema contained "noSearch": true.');
         }
 
         // If the front end preview is activated, we do not index
-        if (isset($meta['fePreview']) && true === $meta['fePreview']) {
-            return null;
+        if (isset($contaoSchemaMeta['fePreview']) && true === $contaoSchemaMeta['fePreview']) {
+            throw DocumentIgnoredException::because('The Contao JSON-LD schema contained "fePreview": true.');
         }
 
         $convertedDocument = [self::URI_DOCUMENT_PROPERTY => (string) $document->getUri()];
@@ -143,7 +150,7 @@ abstract class AbstractProvider implements ProviderInterface, ResponseModifyingP
             }
         }
 
-        return $this->doConvertDocumentToFields($document, $convertedDocument, $meta);
+        return $this->doConvertDocumentToFields($document, $convertedDocument, $contaoSchemaMeta);
     }
 
     public function getDocumentId(Document $document): string
@@ -197,6 +204,11 @@ abstract class AbstractProvider implements ProviderInterface, ResponseModifyingP
             'results' => $this->formatResults($results),
             'pagination' => $this->getPagination($request, $showNextLink),
         ]);
+    }
+
+    protected function skipDocumentsWithoutContaoSchemaData(): bool
+    {
+        return true;
     }
 
     protected function getDocumentContentHash(Document $document): string

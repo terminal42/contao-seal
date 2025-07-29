@@ -13,6 +13,7 @@ use CmsIg\Seal\Schema\Schema;
 use CmsIg\Seal\Search\SearchBuilder;
 use Contao\CoreBundle\Search\Document;
 use Symfony\Component\HttpFoundation\Request;
+use Terminal42\ContaoSeal\Provider\Exception\DocumentIgnoredException;
 use Terminal42\ContaoSeal\Provider\ProviderInterface;
 
 class EngineConfig
@@ -75,9 +76,11 @@ class EngineConfig
     /**
      * @param ?array<string, mixed> $existingIndexedDocument Existing document with the matching document ID
      *
-     * * @return ?array<string, mixed> Return null if this document should be ignored (or if existing, deleted)
+     * @return array<string, mixed>
+     *
+     * @throws DocumentIgnoredException In case the document should be ignored
      */
-    public function convertDocumentToFields(Document $document, array|null $existingIndexedDocument): array|null
+    public function convertDocumentToFields(Document $document, array|null $existingIndexedDocument): array
     {
         return $this->getProvider()->convertDocumentToFields($document, $existingIndexedDocument);
     }

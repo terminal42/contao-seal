@@ -12,7 +12,7 @@ use Terminal42\ContaoSeal\Provider\Util;
 
 class UtilTest extends TestCase
 {
-    public static function extractSearchableContentProvider(): \Generator
+    public static function extractSearchableContentProvider(): iterable
     {
         yield 'Protected elements not allowed' => [
             false,
